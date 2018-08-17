@@ -26,8 +26,8 @@ src/
 └── select_best_age_plots.sh
 ```
 
-G+18: Gagne et al, 2018 (associations, moving groups)
-SD18: Sanders & Das, 2018 (ages thru GALAH, RAVE, LAMOST, etc.)
-K+13: Kharchenko et al, 2013 (MWSC cluster catalog)
-CKS : Johnson+I, Petigura+II, Petigura+IV, Weiss+VI, Fulton & Petigura VII.
-K18 : Kane, 2018 (known planets)
+* `G+18:` Gagne et al, 2018 (associations, moving groups)
+* `SD18:` Sanders & Das, 2018 (ages thru GALAH, RAVE, LAMOST, etc.)
+* `K+13:` Kharchenko et al, 2013 (MWSC cluster catalog)
+* `CKS :` Johnson+I, Petigura+II, Petigura+IV, Weiss+VI, Fulton & Petigura VII.
+* `K18 :` Kane, 2018 (known planets)
