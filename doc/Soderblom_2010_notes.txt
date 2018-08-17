@@ -1,0 +1,122 @@
+Soderblom et al 2010. review of "The Ages of Stars"
+
+Soderblom, now a senior staff scientist at Space Telescope in Baltimore gives a
+look from 2010 at different prospects for age-dating stars. Table 1 is most
+instructive. He starts with "semifundamental" methods:
+
+* nucleocosmochronometry.
+* kinematics
+
+then model-dependent methods
+* isochrones
+* lithium depltion boundary
+* asteroseismology
+
+then empirically-calibrated methods
+* stellar spindown
+* decay of activity
+* decline in lithium.
+
+Nucleocosmochronometry, other than being a mouthful, is the idea that you can
+age-date stars by looking at abundances of radioactive isotopes. This has been
+done for U and Th (halflives 4.47Gyr and 14.05Gyr, respectively), by measuring
+their absorption lines in metal poor stars.  The stars must be metal poor (Pop
+II), because otherwise the absorption lines blend. Even then, it's a hard
+measurement to make. One issue is that you need to assume an initial abundane.
+He indicates that it might work for ensembles of MS stars though.
+
+For kinematics, the idea is to use ensembles of pre-MS stars, and trace their
+orbits in the galacitc potential. Not applicable for older stars because of
+"phase-space mixing".
+
+For model-dependent methods, he notes that isochrone fitting is HARD to make
+precise. Lithium depletion only works when the stars are young.
+Asteroseismology has great promise, particularly for subgiants and giant stars.
+But for FGK dwarfs, you need very precise photometry at high cadence for long
+durations.
+
+For empircally-calibrated methods, he notes that stellar spindown is perhaps
+the best-studied. This is especially true now, after Kepler.
+
+----------
+
+Soderblom makes some important philosophical points.
+
+1) a star's age cannot be measured. It can only be estimated or inferred.
+
+2) we have only one stellar age that is both precise and acurate: that of the
+Sun. This is also known thru radioactive decay of elements in asteroids.
+
+3) what is t=0? Theory might say when hydrostatic eqm begins. But it's hard to
+pinpoint observationally. Might say ZAMS. But then pre-ZAMS stars have negative
+age, which is silly. Stahler 1988 notes a "deuterium-burning birthline", the
+point where protostars lose their shrouds and reveal themselves. At that point,
+an Msun star is ~1e5 years old. It's observationally tractable, and so is a
+good thing to adopt.
+
+4) we should be able to understand the closest stars at least as well as we can
+the entire cosmos! However our universe age from the CMB is better than most
+stellar ages.
+
+---------- 
+
+Some ideas from reading this review:
+
+* We know that one path for unbinding star clusters is colliding them with
+  molecular clouds inside the galactic disk.  But what happens to a planetary
+  system if it collides with a molecular cloud? Does it become less bound? How
+  should the architecture evolve?
+
+* We know that isochrone ages from Kepler are hard to interpret. But for fixed
+  Mstar, what if we looked at the population in different stellar rotation
+  period bins?
+  i.e., for G dwarfs, look at Rp vs Porb maps for Prot in
+   * 30-25 days
+   * 25-20 days
+   * 20-15 days,
+  etc. We know this corresponds to a SEQUENTIAL ordering in age. This is all we
+  care about, for a correctly asked question. Should look at calibrations in
+  detail, but Prot=10days <~> 1Gyr, Prot=20days <~> 3Gyr,
+  Prot=25days <~> 4.57Gyr, etc.
+
+  * in particular, you want to do this for the AVERAGE NUMBER OF PLANETS PER
+    STAR. Focus, at first, on hot Jupiters. Get the CKS sample. Calculate the
+    average NPPS in the above bins. Do you see evolution? Less HJs per star
+    around the slowest rotators? (-> tidal infall!)
+
+  If you're interested in this path, check out reviews on spindown and angular
+  momentum evolution:
+  * Barnes 2009
+  * Irwin and Bouvier 2009
+  * Mamajek 2009
+  and perhaps two of the main calibration papers:
+  * Barnes 2007
+  * Mamajek and Hillenbrand 2008.
+  But be aware that inherent scatter can mess up interpretations. For Hyades
+    (600Myr) and Coma clusters, ~40% Prot scatter -- quoted by
+  * Collier Cameron et al 2009.
+
+  Note that looking at R_HK indicators (measured for CKS) is a possible sanity
+  check, since this also evolves over time.
+
+* We should see a resurgence of kinematic age estimation with Gaia. It's
+  applicable to very young ensembles of stars, fo rwhich few or no other age
+  estimators work well. This might help us date young groups up to ~20Myr.
+
+* there are many examples of bayesian isochrone age fitting in the literature.
+  Pont & Eyer (2004)
+  Jorgensen & Lindegren (2005)
+  Takeda+ 2007: well-defined isochrone ages are only POSSIBLE for a subset of
+    stars. Works best for the massive ones, and the ones near turnoff. The
+    error analysis for isochrone ages is COMPLEX and NONGAUSSIAN. Uncertainties are
+    large even when you get well-defined ages.
+
+* Yuan Sen is the local guy who would interested in this kind of large bayesian
+  age study.
+
+* Vincent Van Eylen is the local guy who I should ask for references about
+  Kepler asteroseismic ages.
+
+
+
+

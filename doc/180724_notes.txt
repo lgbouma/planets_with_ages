@@ -1,0 +1,37 @@
+Tue 24 Jul 2018 05:01:37 PM EDT
+
+goal: plot simple things vs exoplanet age.
+
+exoplanets.org: don't have an age column.
+
+----------
+
+Wed 25 Jul 2018 05:12:35 PM EDT
+
+Made plots. looked at them. yup those age error bars are big.
+
+Was recommended TOPCAT to do the big crossmatch. but it requires weird java
+shit, and doesn't immediately install nicely
+
+Working with Sanders and Das 2018 catalog. There are apparently a few hundred
+thousand objects with exactly RA=140.977121. I doubt it.
+
+So what? Their catalog is crap?
+
+Maybe look at galactic coords and it'll be better...
+Or maybe they BINNED the stars to their healpix values?
+
+Possible. There are 4.9e6 stars in their catalog.
+
+And 1.9e5 unique RA values.
+
+That's clearly crap.
+
+Well... there are 3.9e6 stars with unique GALACTIC LONGITUDES (l). So perhaps 
+that's a better place to start. More or less same with latitudes.
+
+(NB there are _some_ with nans)
+
+----------
+
+Fri 27 Jul 2018 01:39:43 PM EDT

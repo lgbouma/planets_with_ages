@@ -1,0 +1,50 @@
+Isochrone ages from Kepler are hard to interpret. But for fixed Mstar, what if
+we looked at the population in different stellar rotation period bins?  i.e.,
+for G dwarfs, look at Rp vs Porb maps for Prot in
+   * 30-25 days
+   * 25-20 days
+   * 20-15 days,
+etc. We know this corresponds to a SEQUENTIAL ordering in age. This is all we
+care about, for a correctly asked question. Should look at calibrations in
+detail, but Prot=10days <~> 1Gyr, Prot=20days <~> 3Gyr,
+Prot=25days <~> 4.57Gyr, etc.
+
+So here, we get the CKS planet sample. If we want to do a good study, we also
+need to get the CKS STELLAR sample, as describe e.g., by Petigura+ 2017 in CKS
+IV, or by Fulton & Petigura 2018 in CKS VII.
+
+We then want to calculate the average NPPS in the above bins. Do you see
+evolution? Less HJs per star around the slowest rotators? (-> tidal infall!)
+The gap moving? (-> photoevaporation).
+
+If we could get to the point where we can reproduce something similar to FIGURE
+4 from Petigura+ 2017, we will be in good shape. Notice though that focusing on
+particular MASSES might be a pre-req, and could mess our lives up.
+
+A workaround could be to instead use the rotation periods to derive
+gyrochronological ages. Barnes (2009) gave an informal summarized age relation
+in his Eq 5.3:
+
+    log(t_gyro/yr) = 1/n * (logP - loga - b*log(B-V-c))
+
+for
+    a=0.770+/-0.014
+    b=0.553+/-0.052
+    c=0.472+/-0.027.
+
+For gyro ages below around ~4Gyr, this should be pretty good at giving us
+RELATIVE ages. (OFC we really want to know the timescales over which the
+planetary systems are evolving, but we'll take whatever the data give us.)
+
+We could also use age age from the log(R_HK') index. Mamajek (2009), based on
+Mamajek and Hillenbrand 2008, gives:
+
+    log(t_RHK/yr) = -38.053 - 17.912 log10(R_HK') - 1.6675 log10(R_HK')^2.
+
+Might as well try both...
+
+But be aware that inherent scatter can mess up interpretations. For Hyades
+(600Myr) and Coma clusters, ~40% Prot scatter -- quoted by Collier Cameron et
+al 2009.
+
+

@@ -1,0 +1,82 @@
+DOING
+
+***
+* Focus, at first, on hot Jupiters. Get the CKS sample. Calculate the
+  average NPPS in the Prot bins below. Do you see evolution? Less HJs per star
+  around the slowest rotators? (-> tidal infall!)
+***
+
+* We know that isochrone ages from Kepler are hard to interpret. But for fixed
+  Mstar, what if we looked at the population in different stellar rotation
+  period bins?
+  i.e., for G dwarfs, look at Rp vs Porb maps for Prot in
+   * 30-25 days
+   * 25-20 days
+   * 20-15 days,
+  etc. We know this corresponds to a SEQUENTIAL ordering in age. This is all we
+  care about, for a correctly asked question. Should look at calibrations in
+  detail, but Prot=10days <~> 1Gyr, Prot=20days <~> 3Gyr,
+  Prot=25days <~> 4.57Gyr, etc.
+
+  * in particular, you want to do this for the AVERAGE NUMBER OF PLANETS PER
+    STAR. Focus, at first, on hot Jupiters. Get the CKS sample. Calculate the
+    average NPPS in the above bins. Do you see evolution? Less HJs per star
+    around the slowest rotators? (-> tidal infall!)
+
+  If you're interested in this path, check out reviews on spindown and angular
+  momentum evolution:
+  * Barnes 2009
+  * Irwin and Bouvier 2009
+  * Mamajek 2009
+  and perhaps two of the main calibration papers:
+  * Barnes 2007
+  * Mamajek and Hillenbrand 2008.
+  But be aware that inherent scatter can mess up interpretations. For Hyades
+    (600Myr) and Coma clusters, ~40% Prot scatter -- quoted by
+  * Collier Cameron et al 2009.
+
+  Note that looking at R_HK indicators (measured for CKS) is a possible sanity
+  check, since this also evolves over time.
+
+* stellar rotation period vs age...
+  * cross-matching gaia ages vs rotation period measurements: can we
+    check gyrochronology?
+
+* We know that one path for unbinding star clusters is colliding them with
+  molecular clouds inside the galactic disk.  But what happens to a planetary
+  system if it collides with a molecular cloud? Does it become less bound? How
+  should the architecture evolve?
+
+
+--------------------
+READING
+
+* I need to download Torres' catalog of stars. And be sure to flag them as
+  being interesting w/ TESS. (& maybe cross-check against OC WG?)
+
+* review Jeffries 2006 for discussion of Li depletion in OCs
+
+* review Werner+ 2006 "from disks to planets" Spitzer key program
+
+* Gaia will be used, by someone, to extend these samples. Maybe to bigger
+  distances than 50pc. Who will do this? And by when?
+   
+* get the table of Cantat-Gaudin+ 2018 arxiv, Gaia DR2 open clusters
+
+* ditto, for Castro-Ginard+ 2018, found 30 OCs in TGAS, half of them within
+  500pc.
+
+* search: Vallenari+ ~late 2018, who will produce ages for Cantat-Gaudin et
+  al 2018's open clusters
+
+* Kuhn, Hillenbrand+ gaia dr2 recent lists of updated cluster members
+
+* Masseron & Gilmore 2015, Martig+ 2016 -- there are spectroscopic indicator of
+  GIANT STAR masses... [C & N abundances]
+
+catalogs:
+
+* K Luhman, Herrmann, Mamajek et al 2018, new young stars and brown dwarfs in
+  the upper sco association.
+
+--------------------

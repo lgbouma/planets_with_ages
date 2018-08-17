@@ -1,4 +1,6 @@
-this repo contains sub-projects related to planets with ages. namely,
+this repo contains sub-projects related to planets with ages.
+
+namely:
 
 * a study of whether we could disentangle age from metallicity
   dependence in CKS VII. (we could not. metallicity seems more important.)

@@ -1,0 +1,16 @@
+Photometric ages (isochrones)
+
+Asteroseismic ages (for >G dwarfs, w Kepler or maybe TESS asteroseismology)
+
+Open cluster membership
+
+Moving group membership
+
+Loose association membership
+
+MS + asteroseismic binaries -- widely separated binaries w/ asteroseismic companions
+
+Stellar kinematics -- on a population level (u,v,w tells you whether stars are
+	"old" or "young").
+
+MS + WD companions, get WD cooling age from the cooling time argument

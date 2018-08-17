@@ -1,0 +1,57 @@
+'Distances, ages, masses and extinctions for spectroscopic surveys combined
+with Gaia DR2',
+ 'Isochrone set(s) used = PARSEC version 1.2S eta=0.2
+http://stev.oapd.inaf.it/cgi-bin/cmd',
+ 'Adopted prior: 2018 prior described in Sanders et al. (2018)',
+ 'specobjid is the unique identifier for the SEGUE survey',
+ 'CNAME is the unique identifier for the GES survey',
+ 'sobject_id is the unique identifier for the GALAH survey',
+ 'APOGEE_ID is the unique identifier for the APOGEE survey',
+ 'raveid is the unique identifier for the RAVE Cannon survey',
+ 'raveid is the unique identifier for the RAVE DR5 survey',
+ 'obsid is the unique identifier for the LAMOST survey',
+ 'source_id is the Gaia DR2 cross-matched source',
+ 'dm and dm_err give the distance modulus with associated error',
+ 'dist and dist_err give the distance (kpc) with associated error',
+ 'par and par_err give the parallax (mas) output from the code (not directly
+from Gaia) with associated error',
+ 'mass and mass_err give the mass (Msun) with associated error',
+ 'Z and Z_err give the metallicity estimates',
+ 'log10_av and log10_av_err give log10 V-band extinction This is the one column
+without units as ',
+ ' astropy cannot handle log10(mag)',
+ 'log10_teff and log10_teff_err give the log10 effective temp (K)',
+ 'logg and logg_err give the log surface gravity (cm/s^2)',
+ 'dm_log10age_corr gives the correlation between DM and log10 age',
+ 'log10age_Z_corr gives the correlation between log10 age and Z',
+ 'dm_Z_corr gives the correlation between DM and Z',
+ '(l,b) are Galactic coordinates (in rad)',
+ 's is distance (kpc) used for the Galactocentric velocity and action
+calculations = 10**(0.2*dm-2)',
+ 'vlos is radial velocity (km/s)',
+ '(mu_l, mu_b) = Proper motion in Galactic coordinates (mas/yr) (mu_l contains
+cos(b) factor)',
+ '(R,phi,z) are Galactocentric coordinates (kpc) -- convention is right-handed
+coordinate system with',
+ ' positive x away from GC and positive z towards NGP',
+ '(vR,vphi,vz) are Galactocentric polar velocities (km/s)-- note vphi is in the
+negative phi direction ',
+ '(so Sun has positive vphi)',
+ 'We assume the Sun is at (R,z) = (8.2,0.014) kpc with peculiar velocity
+(U,V,W) = (11.10,12.24,7.25) km/s',
+ 'We use the potential PJM16_best.Tpot from McMillan (2017).',
+ 'The actions (JR,Lz,Jz) are computed using the Staeckel fudge from Binney
+(2012) (in units kpc km/s).',
+ 'Rc is the radius of a circular orbit with angular momentum Lz (in kpc).',
+ '*_err are the associated errors in these quantities.flag is an integer where
+0 denotes all columns contain values',
+ 'if flag!=0 then many other columns will be nan',
+ 'if flag=1 the pipeline failed (could not find overlap with any isochrone),',
+ 'if flag=2 there was a problem with spectroscopy,if flag=3 problem with
+photometry,if flag=4 problem with astrometry,if flag=5 problem with mass
+estimate.',
+ 'flag=6 nan errors from pipeline (likely only one isochrone point available)',
+ 'flag=7 pre-main-sequence star with age < 100 Myr (likely binary star?)',
+ 'duplicated -- 1 if duplicate Gaia source_id -- we keep sources in the order:
+APOGEE, GALAH, GES, RAVE-ON, RAVE and LAMOST',
+ 'best -- 1 if flag=0, duplicated=0 and valid Gaia source_id'
