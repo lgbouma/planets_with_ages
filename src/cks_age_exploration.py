@@ -61,43 +61,48 @@ from download_furlan_2017_results import \
 def arr(x):
     return np.array(x)
 
-if __name__ == '__main__':
 
-    plot_wellmeasured = False
-    plot_janky = False
-    plot_boxplot = False
-    plot_stacked_histograms = False
-    plot_quartile_scatter = False
-    plot_octile_scatter = False
-    plot_metallicity_controlled = False
-    plot_metallicity_controlled_pcttiles = True
+def _get_cks_data():
+    '''
+    Returns:
 
-    if plot_wellmeasured:
-        print('plotting well measured params...')
-    if plot_janky:
-        print('plotting janky params...')
+        dataframe with CKS II planet data, supplemented by CKS VII stellar
+        data, supplemented by Furlan+2017 dilution column.
 
-    # There are 1305 CKS spectra of KOIs with 2025 planet candidates. The
-    # overlapping CKS stellar samples are: (1) magnitude-limited, Kp < 14.2,
-    # (2) multi-planet hosts (3) USP hosts (4) HZ hosts (5) other.  Column data
-    # are in ../data/cks-column-definitions.txt. These data are from the CKS
-    # website, 2018/07/30, from paper II.
+    Description:
+
+        There are 1305 CKS spectra of KOIs with 2025 planet candidates. The
+        overlapping CKS stellar samples are: (1) magnitude-limited, Kp < 14.2,
+        (2) multi-planet hosts (3) USP hosts (4) HZ hosts (5) other.  Column
+        data are in ../data/cks-column-definitions.txt.
+
+        df_II data are from the CKS website, 2018/07/30, and were released in
+        paper II.
+
+        df_VII data are currently (2018/08/04) secret, from CKS paper VII.
+
+        since cks VII table only has star data, I merge it against cks II
+        table, using id_starname column, to get planet data too.
+
+        I then also merge against Furlan+2017 to get the dilution column,
+        "Avg".
+    '''
+
     df_II = pd.read_csv('../data/cks_physical_merged.csv')
 
-    # These data are currently secret, from CKS paper VII.
     df_VII = pd.read_csv('../data/tab_star-machine.csv')
 
-    sel = arr(make_age_histograms_get_f_inds(df_VII))
+    sel = arr(make_age_histograms_get_f_inds(df_VII,
+              actually_make_plots=False))
+
     df_VII['selected'] = sel
 
-    # cks VII table only has star data. merge against cks II table, using
-    # id_starname column, to get planet data too.
     df = pd.merge(df_VII, df_II, how='left', on='id_starname',
                   suffixes=('_VII', '_II'))
     sel = arr(df['selected'])
 
-    # get Furlan+ 2017 table. Format in id_starname in same 0-padded foramt as
-    # CKS.
+    # get Furlan+ 2017 table. Format in id_starname in same 0-padded foramt
+    # as CKS.
     furlan_fname = '../data/Furlan_2017_table9.csv'
     if not os.path.exists(furlan_fname):
         download_furlan_radius_correction_table()
@@ -111,8 +116,17 @@ if __name__ == '__main__':
 
     df = pd.merge(df, f17, how='left', on='id_starname', suffixes=('cks','f17'))
 
-    ##########
-    # all cuts from Petigura+ 2018 CKS IV
+    return df
+
+
+def _apply_cks_IV_metallicity_study_filters(df):
+    '''
+    given df from _get_cks_data, return the boolean indices for the
+    subset of interest.
+
+    (See Petigura+ 2018, CKS IV, table 1)
+    '''
+
     sel = np.isfinite(arr(df['iso_prad']))
     sel &= arr(df['iso_prad']) < 32
     sel &= np.isfinite(arr(df['giso_slogage']))
@@ -141,9 +155,31 @@ if __name__ == '__main__':
     # radius correction factor <5%, logical or not given in Furlan+2017 table.
     sel &= ( (arr(df['Avg']) < 1.05) | (~np.isfinite(df['Avg']) ) )
 
-    _ = arr(make_age_histograms_get_f_inds(df[sel]))
+    return sel
+
+
+if __name__ == '__main__':
+
+    plot_wellmeasured = False
+    plot_janky = False
+    plot_boxplot = False
+    plot_stacked_histograms = False
+    plot_quartile_scatter = False
+    plot_octile_scatter = False
+    plot_metallicity_controlled = False
+    plot_metallicity_controlled_pcttiles = True
+
+    if plot_wellmeasured:
+        print('plotting well measured params...')
+    if plot_janky:
+        print('plotting janky params...')
+
+    df = _get_cks_data()
+    sel = _apply_cks_IV_metallicity_study_filters(df)
 
     # raw exploration plots
+    _ = arr(make_age_histograms_get_f_inds(df[sel]))
+
     goodparams = ['koi_period', 'iso_prad', 'koi_count','koi_dor']
     jankyparams = ['cks_smet_VII']
 

@@ -297,7 +297,8 @@ def plot_jankyparam(tab, finite_age_inds, jankyparam, logx, logy,
         print('saved {:s}'.format(fname_pdf))
 
 
-def make_age_histograms_get_f_inds(df, is_cks=True, outstr='', logage=False):
+def make_age_histograms_get_f_inds(df, is_cks=True, outstr='', logage=False,
+                                   actually_make_plots=True):
     '''
     Saves to
         '../results/sigmaage_by_age_hist_cks{outstr}.pdf'
@@ -313,6 +314,8 @@ def make_age_histograms_get_f_inds(df, is_cks=True, outstr='', logage=False):
     f_m_ages = np.isfinite(df['giso_slogage_err2'])
 
     sel = f_ages & f_p_ages & f_m_ages
+    if not actually_make_plots:
+        return sel
 
     sigma_tau_cks = np.sqrt((10**(arr(df['giso_slogage_err1'])[sel]))**2 + \
                             (10**(np.abs(arr(df['giso_slogage_err2'])[sel])))**2)

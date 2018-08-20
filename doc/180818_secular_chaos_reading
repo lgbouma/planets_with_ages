@@ -1,0 +1,109 @@
+###############################################################################
+Sat 18 Aug 2018 10:15:10 AM EDT
+
+Lithwick and Wu, 2014 -- PNAS:
+Secular Chaos and its application to Mercury, hot Jupiters, and organization of
+planetary systems.
+
+* To linear order in M, secular evolution ;+ intxns btwn rings, which represent
+  the planets after their masses are smeared out over orbits.
+
+* Though important in SS, not much work done on secular chaos
+
+* Mercury is marginally on the limit of secular chaos. Generally, the innermost 
+  planet is most susceptible to large variations (ref 21).
+
+* Lithwick & Wu earlier found that secular chaos could provide another high
+  eccentricity migration mechanism for HJs.
+  For this to work, you need a system with >= 3 giant planets.
+  But the data allow this (long term RV might falsify. However this is a
+  relatively strong assumption.).
+
+* A reminder: high e migration is favored, b/c most of the HJs are >2a_roche.
+  (a_roche for tidal brekaup).
+
+* Raising the initial AMD leads to more efficient HJ formation
+
+* Their mechanism would predict that HJs have low masses, for giant planets.
+  This is what the RV surveys observe (Msini <~ 2MJ, while further out get many
+  Msini>~2M_J planets).
+
+* Planetary systems might be organized by secular chaos: if they maintain
+  states of marginal stability at all times.
+  
+* Speculation:
+  
+  Think of AMD as the free energy.
+
+  Conjecture that secular chaos drives planetary systems to split up
+  (equipartition) the AMD btwn planets.
+
+  Initially, planets merge or are ejected until the AMD is s.t. neighboring
+  planets do not collide in a state of equipartition.
+
+  Then, secular evoln over long timescales is set by fluctuations about
+  equipartition.
+
+  One planet gains enough of the AMD that it merges with a neighbor, or is
+  ejected, or approaches the star.
+
+  On longer timescales, fluctuations can once again lead to instability.
+
+###############################################################################
+Sat 18 Aug 2018 11:02:02 AM EDT
+
+Weiss+ 2018:
+CKS V: Peas in a Pod -- Kepler multis are similar in size and regularly spaced.
+
+* Using updated radii and semimaj axes
+
+* To analyze distributions of planet pair radii ratio, and of semimaj axis
+  ratios, the trick is coming up w/ independent, detectability-corrected
+  ratios.
+  To do this, Weiss came up with a nice monte carlo procedure that involves
+  sampling, computing SNRs, and dropping non-detected pairs.
+
+* In this manner, looks at R_j+1 / R_j distribution.
+  And a_j+1 / a_j distribution.
+
+* Finally, computes separations in units of mutual hill radii.
+  This requires a mass estimate of planets, for which Weiss+Marcy14 M(R)
+  relation used.
+  
+  R_H = (m_j + m_{j+1} / 3Mstar )^{1/3}  (a_j + a_{j+1})/2
+
+  is the mutual hill radius of two planets. The separation in units of mutual
+  hill radii is then
+
+  Δ = (a_{j+1} - a_j)/R_H
+
+***
+  NB even though the orbital separations of Kepler planets in units of AU are
+  small compared to the SS, in units of mutual hill radii, this is not the
+  case!!
+***
+
+* Nice summary of Dawson+16:
+
+  if in situ formation is dominant mode of planet formn, then planets that
+  formed in gas-rich environments likely have small mutual hill separations and
+  large (>1%) gas fractions, whereas planets that formed in gas poor disks likely
+  have large mtuual hil separations and low (<1%) gas fractions.
+
+  (OFC, must exclude planets whose gas fractions are depleted from photoevapn)
+
+###############################################################################
+Are there more multis around metal-rich stars?
+
+Are there fewer multis (2,3,4) around the oldest stars?
+  (AKA: does the occurrence rate of multi-transiting systems change in time?)
+
+For planets >3Gyr, what fraction of detected systems are single?
+  What fraction are multi?
+Ditto for planets <3Gyr?
+
+Does the average separation between planet pairs in multis (in units of mutual
+hill radii) increase for the oldest multis?
+
+Do the innermost planets tend to be detected further away from the star in the
+oldest systems?

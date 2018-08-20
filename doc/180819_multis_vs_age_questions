@@ -1,0 +1,55 @@
+Are there fewer multis (2,3,4) around the oldest stars?
+  (AKA: does the occurrence rate of multi-transiting systems change in time?)
+
+  --> Weiss+18, CKS VI indicates no (Fig 5, since [Fe/H]~age, and low Fe/H still
+  has some multis), compared to singles in mag-limited samples.
+
+Are there more multis around metal-rich stars?
+
+  --> Weiss+18, CKS VI indicates no, compared to singles in mag-limited samples.
+
+-----
+
+For planets >3Gyr, what fraction of detected systems are single?
+  What fraction are multi?
+Ditto for planets <3Gyr?
+  [or, ask the same question in quartiles of age]
+
+-----
+
+COMPARE MULTIS TO MULTIS:
+
+1. Does the average separation between planet pairs in multis (in units of mutual
+hill radii) increase for the oldest multis?
+
+2. Does the innermost planet of a multi tend to be detected further away from the
+host star in the oldest systems?
+
+-----
+
+Main question:
+How does the number of planets per system scale with the host star's
+metallicity?
+
+Petigura+ CKS IV's results are for the average number of planets per star.
+
+The above question is closer to the Zhu+18 Kepler TTV+LAMOST study, which
+targets the true multiplicity function, and the fraction of stars with planets.
+
+3. How does the average number of transiting planets per stellar system change
+with metallicity?
+(AKA: I want Weiss+18 CKS VI's Figure 1, the detected system multiplicity
+function, for high and low metallicities)
+
+(Is it really the case that more metal-rich stars don't a larger number of
+detected transiting planets per system?!
+This would be weird...)
+
+-----
+
+To answer questions 1,2,3: we need to reconstruct Weiss+18's CKS VI multi
+samples.
+She provides enough details to do this, I think.
+
+[though I think she also did it w/ gaia parameters? well, i have the CKS VII
+table and this is probably enough]
