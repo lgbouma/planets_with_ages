@@ -302,7 +302,7 @@ if __name__ == '__main__':
         plot_xmatch_separations(t, '../results/Gagne18_TIC_crossmatch_separations.png')
         make_Gagne18_skymaps(t)
 
-    #make_Kharchenko13_TIC_crossmatch()
+    make_Kharchenko13_TIC_crossmatch()
 
     if make_plots:
         mwsc_xmatch_dir = '../results/MWSC_TIC_crossmatched/'
