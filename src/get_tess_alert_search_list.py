@@ -24,12 +24,13 @@ from mast_utils import tic_single_object_crossmatch
 def arr(x):
     return np.array(x)
 
-def make_Gagne18_TIC_crossmatch():
+def make_Gagne18_TIC_crossmatch(maxsep=2):
     '''
     Gagne et al 2018's BANYAN association list.
     Most of these have inferable ages.
 
-    maxsep = 2 arcsec, hard-coded by default.
+    maxsep = 10 arcsec, preferred (because they're high PM).
+    Then use photometry or proper motion information to disambiguate.
     '''
     # Downloaded direct from
     # http://iopscience.iop.org/0004-637X/856/1/23/suppdata/apjaaae09t5_mrt.txt
@@ -57,9 +58,11 @@ def make_Gagne18_TIC_crossmatch():
 
     RA = coords.ra.value
     dec = coords.dec.value
+    pm_RA, pm_dec = arr(t['pmRA']), arr(t['pmDE'])
 
     # get TIC IDs for these stars
-    maxsep = (2*u.arcsec).to(u.deg).value
+    maxsep_arcsec = maxsep
+    maxsep = (maxsep*u.arcsec).to(u.deg).value
 
     # MatchID means TIC ID. cols and 
     cols = ['dstArcSec', 'Tmag', 'GAIA', 'Teff', 'MatchID', 'MatchRA',
@@ -71,17 +74,18 @@ def make_Gagne18_TIC_crossmatch():
 
     print('{:d} objects in Gagne table'.format(len(RA)))
 
-    for ix, thisra, thisdec in list(zip(range(len(RA)), RA, dec)):
+    for ix, _ra, _dec, _pmra, _pmdec in list(
+        zip(range(len(RA)), RA, dec, pm_RA, pm_dec)):
 
         print('{:d}/{:d}'.format(ix, len(RA)))
-        xm = tic_single_object_crossmatch(thisra, thisdec, maxsep)
+        xm = tic_single_object_crossmatch(_ra, _dec, maxsep)
 
         if len(xm['data'])==0:
             for k in list(sav.keys()):
                 if k=='ra':
-                    sav['ra'].append(thisra)
+                    sav['ra'].append(_ra)
                 elif k=='dec':
-                    sav['dec'].append(thisdec)
+                    sav['dec'].append(_dec)
                 else:
                     sav[k].append(-99)
             continue
@@ -92,15 +96,111 @@ def make_Gagne18_TIC_crossmatch():
             continue
 
         else:
-            # take the closest star as the match.
-            sep_distances = []
+            # usually, would take the closest star as the match.
+            sep_distances, pms_ra, pms_dec = [], [], []
             for dat in xm['data']:
                 sep_distances.append(dat['dstArcSec'])
-            sep_distances = np.array(sep_distances)
-            closest_ind = np.argsort(sep_distances)[0]
-            print(sep_distances, sep_distances[closest_ind])
-            for k in list(sav.keys()):
-                sav[k].append(xm['data'][closest_ind][k])
+                pms_ra.append(dat['pmRA'])
+                pms_dec.append(dat['pmDEC'])
+
+            sep_distances = np.array(sep_distances).astype(float)
+            pms_ra = np.array(pms_ra).astype(float)
+            pms_dec = np.array(pms_dec).astype(float)
+            closest_sep_ind = np.argsort(sep_distances)[0]
+
+            print('\tdesired propmot_ra, propmot_dec')
+            print('\t', _pmra, _pmdec)
+            print('\tmatched sep distances, propmot_ra, propmot_dec')
+            print('\t', sep_distances, pms_ra, pms_dec)
+
+            # however, w/ 10 arcsec xmatch radius, we really want the star
+            # that is closest, unless it has a bad PM match...
+
+            if (
+                (type(_pmra) != np.float64 and type(_pmdec) != np.float64)
+                or
+                (_pmra == 0. and _pmdec == 0.)
+            ):
+                # if we don't have reference proper motions, we're screwed
+                # anyway, so just take the closest star.
+                print('\ttaking closest in separation b/c bad reference PM')
+                for k in list(sav.keys()):
+                    sav[k].append(xm['data'][closest_sep_ind][k])
+                continue
+
+            # compute the expected magnitude of proper motion
+            mu_expected = np.sqrt( _pmdec**2 + _pmra**2 * np.cos(_dec)**2 )
+            # compute the magnitude of proper motions in matches. (the
+            # declinations are close enough that the slightly-wrong projection
+            # does not matter).
+            mu_matches = np.sqrt(pms_dec**2 + pms_ra**2 * np.cos(_dec)**2)
+
+            try:
+                closest_mu_ind = np.nanargmin(mu_matches - mu_expected)
+            except ValueError:
+                print('\ttaking closest in separation b/c matched PMs all nan')
+                for k in list(sav.keys()):
+                    sav[k].append(xm['data'][closest_sep_ind][k])
+                continue
+
+
+            if len(mu_matches[~np.isfinite(mu_matches)]) > 0:
+                print('\tcaught at least one nan in matched PMs')
+                #import IPython; IPython.embed()
+
+            if closest_sep_ind == closest_mu_ind:
+                print('\ttaking closest in separation (same as in PM)')
+                for k in list(sav.keys()):
+                    sav[k].append(xm['data'][closest_sep_ind][k])
+                continue
+
+            # if the closest in separation and closest in PM differ, but the
+            # closest in separation has the wrong PM sign, then take the
+            # closest in PM.
+            elif ( (closest_sep_ind != closest_mu_ind) and
+                    ( (np.sign(pms_ra[closest_sep_ind]) != np.sign(_pmra)) or
+                      (np.sign(pms_dec[closest_sep_ind]) != np.sign(_pmdec)) )
+                 ):
+
+                print('\ttaking closest in PM magnitude (bad signs for closest in sep)')
+                for k in list(sav.keys()):
+                    sav[k].append(xm['data'][closest_mu_ind][k])
+                continue
+
+            # if the closest in separation and closest in PM differ, and the
+            # closest in separation has the right PM signs, then take the
+            # closest in separation.
+            # (ideally chi_sq would be in play?)
+            elif ( (closest_sep_ind != closest_mu_ind) and
+                    ( (np.sign(pms_ra[closest_sep_ind]) == np.sign(_pmra)) and
+                      (np.sign(pms_dec[closest_sep_ind]) == np.sign(_pmdec)) )
+                 ):
+
+                print('\ttaking closest in separation (good signs for closest in sep)')
+                for k in list(sav.keys()):
+                    sav[k].append(xm['data'][closest_sep_ind][k])
+                continue
+
+            # if the closest in separation and closest in PM differ, and the
+            # closest in separation has one wrong PM sign, then take the
+            # closest in PM.
+            # (ideally chi_sq would be in play?)
+            elif ( (closest_sep_ind != closest_mu_ind) and
+                    ( ((np.sign(pms_ra[closest_sep_ind]) == np.sign(_pmra)) and
+                      (np.sign(pms_dec[closest_sep_ind]) != np.sign(_pmdec)))
+                     or
+                      ((np.sign(pms_ra[closest_sep_ind]) != np.sign(_pmra)) and
+                      (np.sign(pms_dec[closest_sep_ind]) == np.sign(_pmdec)))
+                    )
+                 ):
+
+                print('\ttaking closest in PM magnitude b/c sep signs wrong')
+                for k in list(sav.keys()):
+                    sav[k].append(xm['data'][closest_mu_ind][k])
+                continue
+
+            else:
+                raise AssertionError
 
         del xm
 
@@ -108,14 +208,17 @@ def make_Gagne18_TIC_crossmatch():
     for k in list(sav.keys()):
         t[k] = np.array(sav[k])
 
-    ascii.write(t, output='../results/Gagne_2018_TIC_crossmatched.csv',
+    ascii.write(t,
+                output='../results/'+\
+                'Gagne_2018_TIC_crossmatched_{:d}arcsec_maxsep.csv'.format(
+                    int(maxsep_arcsec)),
                 format='ecsv')
 
 
 def plot_xmatch_separations(t, outname):
     import matplotlib.pyplot as plt
     plt.close('all')
-    plt.hist(t[t['dstArcSec'] != -99]['dstArcSec'], bins=20)
+    plt.hist(t[t['dstArcSec'] != -99]['dstArcSec'], bins=40)
     plt.xlabel('xmatch separation (arcsec)')
     plt.tight_layout()
     plt.savefig(outname, dpi=300)
@@ -164,17 +267,17 @@ def crossmatch_MWSC_to_TIC(maxsep=(2*u.arcsec).to(u.deg).value):
 
         print('{:d} objects in {:s}'.format(len(ra), mwsc_file))
 
-        for ix, thisra, thisdec in list(zip(range(len(ra)), ra, dec)):
+        for ix, _ra, _dec in list(zip(range(len(ra)), ra, dec)):
 
             print('{:d}/{:d}'.format(ix, len(ra)))
-            xm = tic_single_object_crossmatch(thisra, thisdec, maxsep)
+            xm = tic_single_object_crossmatch(_ra, _dec, maxsep)
 
             if len(xm['data'])==0:
                 for k in list(sav.keys()):
                     if k=='ra':
-                        sav['ra'].append(thisra)
+                        sav['ra'].append(_ra)
                     elif k=='dec':
-                        sav['dec'].append(thisdec)
+                        sav['dec'].append(_dec)
                     else:
                         sav[k].append(-99)
                 continue
@@ -250,7 +353,7 @@ def crossmatch_alerts(ticidlist_path, sector_id=0):
 
     # make list of all files with TIC crossmatches that we will search
     searchfiles = []
-    searchfiles.append('../results/Gagne_2018_TIC_crossmatched.csv')
+    searchfiles.append('../results/Gagne_2018_TIC_crossmatched_10arcsec_maxsep.csv')
     searchfiles.append('../data/Kane_MAST_Crossmatch_CTL.csv')
     mtxdir = '../results/MWSC_TIC_crossmatched/'
     for f in glob(mtxdir+'????_*_1sigma_members_TIC_crossmatched.csv'):
@@ -292,25 +395,36 @@ def crossmatch_alerts(ticidlist_path, sector_id=0):
 
 if __name__ == '__main__':
 
-    make_plots = False
+    make_plots = True
 
-    if not os.path.exists('../results/Gagne_2018_TIC_crossmatched.csv'):
-        make_Gagne18_TIC_crossmatch()
+    g18_maxsep = 10 # arcsec
+
+    if not os.path.exists(
+        '../results/Gagne_2018_TIC_crossmatched_{:d}arcsec_maxsep.csv'.
+        format(g18_maxsep)):
+
+        make_Gagne18_TIC_crossmatch(maxsep=g18_maxsep)
 
     if make_plots:
-        t = ascii.read('../results/Gagne_2018_TIC_crossmatched.csv')
+        t = ascii.read(
+            '../results/Gagne_2018_TIC_crossmatched_{:d}arcsec_maxsep.csv'.
+            format(g18_maxsep))
         plot_xmatch_separations(t, '../results/Gagne18_TIC_crossmatch_separations.png')
         make_Gagne18_skymaps(t)
 
-    make_Kharchenko13_TIC_crossmatch()
+    do_Kharchenko = False
 
-    if make_plots:
-        mwsc_xmatch_dir = '../results/MWSC_TIC_crossmatched/'
-        fnames = glob(mwsc_xmatch_dir+'01?[0-1]_*_1sigma_members_TIC_crossmatched.csv')
-        for fname in fnames:
-            t = ascii.read(fname)
-            plot_xmatch_separations(
-                t, fname.replace('.csv','_separationhist.png'))
+    if do_Kharchenko:
+
+        make_Kharchenko13_TIC_crossmatch()
+
+        if make_plots:
+            mwsc_xmatch_dir = '../results/MWSC_TIC_crossmatched/'
+            fnames = glob(mwsc_xmatch_dir+'01?[0-1]_*_1sigma_members_TIC_crossmatched.csv')
+            for fname in fnames:
+                t = ascii.read(fname)
+                plot_xmatch_separations(
+                    t, fname.replace('.csv','_separationhist.png'))
 
     #TODO: use real data, once it exists
     crossmatch_alerts('../data/sector_0_TOI_list.txt')
