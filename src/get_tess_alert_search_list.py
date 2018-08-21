@@ -16,17 +16,19 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import ascii
 
+from astroquery.vizier import Vizier
+
 import sys, os, time, re, json
 from glob import glob
 
-from mast_utils import tic_single_object_crossmatch
+from mast_utils import tic_single_object_crossmatch, tic_gaia_id_xmatch
 
 def arr(x):
     return np.array(x)
 
-def make_Gagne18_TIC_crossmatch(maxsep=2):
+def make_Gagne18_BANYAN_XI_TIC_crossmatch(maxsep=2):
     '''
-    Gagne et al 2018's BANYAN association list.
+    Gagne et al 2018's BANYAN XI association list.
     Most of these have inferable ages.
 
     maxsep = 10 arcsec, preferred (because they're high PM).
@@ -210,7 +212,7 @@ def make_Gagne18_TIC_crossmatch(maxsep=2):
 
     ascii.write(t,
                 output='../results/'+\
-                'Gagne_2018_TIC_crossmatched_{:d}arcsec_maxsep.csv'.format(
+                'Gagne_2018_BANYAN_XI_TIC_crossmatched_{:d}arcsec_maxsep.csv'.format(
                     int(maxsep_arcsec)),
                 format='ecsv')
 
@@ -337,7 +339,46 @@ def make_Kharchenko13_TIC_crossmatch():
     crossmatch_MWSC_to_TIC()
 
 
-def crossmatch_alerts(ticidlist_path, sector_id=0):
+def make_Oh17_TIC_crossmatch():
+    '''
+    Semyeong Oh et al (2017) discovered 10.6k stars within 10pc that are in
+    likely comoving pairs.
+
+    see
+    http://vizier.cfa.harvard.edu/viz-bin/VizieR?-source=J/AJ/153/257
+    '''
+
+    # Download Oh's tables of stars, pairs, and groups.
+    Vizier.ROW_LIMIT = -1
+    catalog_list = Vizier.find_catalogs('J/AJ/153/257')
+    catalogs = Vizier.get_catalogs(catalog_list.keys())
+
+    stars = catalogs[0]
+    pairs = catalogs[1]
+    groups = catalogs[2]
+
+    stars['RA'] = stars['RAJ2000']
+    stars['DEC'] = stars['DEJ2000']
+    foo = stars.to_pandas()
+    foo.to_csv('../data/Oh_2017_table1a_stars.csv',index=False)
+
+    print('saved ../data/Oh_2017_table1a_stars.csv')
+    print(
+    '''I then uploaded this list to MAST, and used their spatial
+        cross-matching with a 2 arcsecond cap, following
+            https://archive.stsci.edu/tess/tutorials/upload_list.html
+        This crossmatch the output that I then saved to
+            ../results/Oh_2017_TIC_crossmatched_2arcsec_on_MAST.csv
+        and it was a good deal faster than the object-by-object crossmatch that
+        I ran through their API for the other two searches.
+
+        Of the 10606 stars from Oh 2017, there were 9701 matches. Good enough.
+    '''
+    )
+
+
+
+def crossmatch_alerts(ticidlist_path, sector_id=0, find_alerts_in_MWSC=True):
     '''
     take a list of TIC IDs from MIT alerts. do they overlap with any of:
         * Kharchenko+13's clusters
@@ -348,16 +389,26 @@ def crossmatch_alerts(ticidlist_path, sector_id=0):
         interest. no header info is assumed.
     '''
 
-    df = pd.read_csv(ticidlist_path, names=['ticid'])
+    df = pd.read_csv(ticidlist_path, names=['ticid'], comment='#')
     TOIids = arr(df['ticid'])
 
     # make list of all files with TIC crossmatches that we will search
     searchfiles = []
-    searchfiles.append('../results/Gagne_2018_TIC_crossmatched_10arcsec_maxsep.csv')
+    searchfiles.append('../results/Gagne_2018_BANYAN_XI_TIC_crossmatched_10arcsec_maxsep.csv')
     searchfiles.append('../data/Kane_MAST_Crossmatch_CTL.csv')
-    mtxdir = '../results/MWSC_TIC_crossmatched/'
-    for f in glob(mtxdir+'????_*_1sigma_members_TIC_crossmatched.csv'):
-        searchfiles.append(f)
+    searchfiles.append('../results/Oh_2017_TIC_crossmatched_2arcsec_on_MAST.csv')
+
+    searchfiles.append('../results/Rizzuto_15_table_2_USco_PMS_TIC_crossmatched_3arcsec_MAST.csv')
+    searchfiles.append('../results/Rizzuto_15_table_3_USco_disks_TIC_crossmatched_3arcsec_MAST.csv')
+    searchfiles.append('../results/Rizzuto_11_table_1_ScoOB2_members_TIC_3arcsec_crossmatch_MAST.csv')
+    searchfiles.append('../results/Preibisch_01_table_1_USco_LiRich_members_TIC_3arcsec_crossmatch_MAST.csv')
+    searchfiles.append('../results/Luhman_12_table_1_USco_IR_excess_TIC_3arcsec_crossmatch_MAST.csv')
+
+    if find_alerts_in_MWSC:
+        mtxdir = '../results/MWSC_TIC_crossmatched/'
+        for f in glob(mtxdir+'????_*_1sigma_members_TIC_crossmatched.csv'):
+            searchfiles.append(f)
+
     searchfiles = np.sort(searchfiles)
 
     savname = 'sector_{:d}_alert_matches.csv'.format(sector_id)
@@ -393,29 +444,177 @@ def crossmatch_alerts(ticidlist_path, sector_id=0):
     print('done, saved in {:s}'.format(savdir+savname))
 
 
+def make_Rizzuto15_TIC_crossmatch():
+    '''
+    Aaron Rizzuto et al (2015) picked out ~400 candidate USco members, then
+    surveyed them for Li absorption. Led to 237 spectroscopically confirmed
+    members.
+
+    see
+    http://vizier.cfa.harvard.edu/viz-bin/VizieR?-source=J/MNRAS/448/2737
+    '''
+
+    Vizier.ROW_LIMIT = -1
+    catalog_list = Vizier.find_catalogs('J/MNRAS/448/2737')
+    catalogs = Vizier.get_catalogs(catalog_list.keys())
+
+    cands = catalogs[0]
+    usco_pms = catalogs[1] # pre-MS stars in USco
+    usco_disk = catalogs[2] # members of USco w/ circumstellar disk
+
+    c = SkyCoord([ra.replace(' ',':')
+                    for ra in list(map(str,usco_pms['RAJ2000']))],
+                 [de.replace(' ',':')
+                    for de in list(map(str,usco_pms['DEJ2000']))],
+                 unit=(u.hourangle, u.deg))
+    usco_pms['RA'] = c.ra.value
+    usco_pms['DEC'] = c.dec.value
+    usco_pms.remove_column('RAJ2000')
+    usco_pms.remove_column('DEJ2000')
+    foo = usco_pms.to_pandas()
+    outname = '../data/Rizzuto_15_table_2_USco_PMS.csv'
+    import IPython; IPython.embed()
+
+    foo.to_csv(outname,index=False)
+    print('saved {:s}'.format(outname))
+
+    c = SkyCoord([ra.replace(' ',':')
+                    for ra in list(map(str,usco_disk['RAJ2000']))],
+                 [de.replace(' ',':')
+                    for de in list(map(str,usco_disk['DEJ2000']))],
+                 unit=(u.hourangle, u.deg))
+    usco_disk['RA'] = c.ra.value
+    usco_disk['DEC'] = c.dec.value
+    usco_disk.remove_column('RAJ2000')
+    usco_disk.remove_column('DEJ2000')
+    foo = usco_disk.to_pandas()
+    outname = '../data/Rizzuto_15_table_3_USco_hosts_disk.csv'
+    foo.to_csv(outname,index=False)
+    print('saved {:s}'.format(outname))
+
+    print(
+    ''' I then uploaded these lists to MAST, and used their spatial
+        cross-matching with a 3 arcsecond cap, following
+            https://archive.stsci.edu/tess/tutorials/upload_list.html
+
+        This crossmatch is the output that I then saved to
+            '../results/Rizzuto_15_table_2_USco_PMS_TIC_crossmatched_2arcsec_MAST.csv'
+            '../results/Rizzuto_15_table_3_USco_disks_TIC_crossmatched_2arcsec_MAST.csv'
+    '''
+    )
+
+
+def make_vizier_TIC_crossmatch(vizier_search_str, ra_str, dec_str, table_num=0,
+                              outname=''):
+    '''
+    vizier_search_str: 'J/MNRAS/416/3108'
+    table_num=0
+    ra_str = '_RA'
+    dec_str = '_DE'
+    outname = '../data/Rizzuto_11_table_1_ScoOB2_members.csv'
+    '''
+
+    Vizier.ROW_LIMIT = -1
+    catalog_list = Vizier.find_catalogs(vizier_search_str)
+    catalogs = Vizier.get_catalogs(catalog_list.keys())
+
+    tab = catalogs[0]
+
+    # MAST uploads need these two column names
+    tab['RA'] = tab[ra_str]
+    tab['DEC'] = tab[dec_str]
+
+    assert tab[ra_str].unit == u.deg
+
+    foo = tab.to_pandas()
+    foo.to_csv(outname,index=False)
+    print('saved {:s}'.format(outname))
+
+    print(
+    ''' I then uploaded these lists to MAST, and used their spatial
+        cross-matching with a 3 arcsecond cap, following
+            https://archive.stsci.edu/tess/tutorials/upload_list.html
+
+        This crossmatch is the output that I then saved to
+            {:s}
+    '''.format(outname.replace('data','results').replace('.csv','_TIC_3arcsec_crossmatch_MAST.csv'))
+    )
+
+
+def make_Rizzuto11_TIC_crossmatch():
+    '''
+    Aaron Rizzuto et al (2011) gave a list of 436 Sco OB2 members.
+    http://vizier.cfa.harvard.edu/viz-bin/VizieR?-source=J/MNRAS/416/3108
+    '''
+    vizier_search_str = 'J/MNRAS/416/3108'
+    table_num = 0
+    ra_str = '_RA'
+    dec_str = '_DE'
+    outname = '../data/Rizzuto_11_table_1_ScoOB2_members.csv'
+
+    make_vizier_TIC_crossmatch(vizier_search_str, ra_str, dec_str,
+                               table_num=table_num, outname=outname)
+
+
+def make_Preibisch01_TIC_crossmatch():
+    '''
+    Thomas Preibisch did a spectroscopic survey for low-mass members of USco.
+    http://vizier.cfa.harvard.edu/viz-bin/VizieR?-source=J/AJ/121/1040
+    '''
+    vizier_search_str = 'J/AJ/121/1040'
+    table_num = 0
+    ra_str = '_RA'
+    dec_str = '_DE'
+    outname = '../data/Preibisch_01_table_1_USco_LiRich_members.csv'
+
+    make_vizier_TIC_crossmatch(vizier_search_str, ra_str, dec_str,
+                               table_num=table_num, outname=outname)
+
+
+def make_Luhman12_TIC_crossmatch():
+    '''
+    Luhman and Mamajek 2012 combined Spitzer & WISE photometry for all known
+    USco members. Found IR excesses.
+    http://vizier.cfa.harvard.edu/viz-bin/VizieR?-source=J/ApJ/758/31
+    '''
+    vizier_search_str = 'J/ApJ/758/31'
+    table_num = 0
+    ra_str = '_RA'
+    dec_str = '_DE'
+    outname = '../data/Luhman_12_table_1_USco_IR_excess.csv'
+
+    make_vizier_TIC_crossmatch(vizier_search_str, ra_str, dec_str,
+                               table_num=table_num, outname=outname)
+
 if __name__ == '__main__':
 
-    make_plots = True
+    do_Kharchenko13 = False
+    do_Gagne18 = False
+    do_Oh17 = False
+    do_Rizzuto15 = False
+    do_Rizzuto11 = False
+    do_Preibisch01 = False
+    do_Luhman12 = True
+
+    make_plots = False
+
+    find_which_alerts_are_interesting = True #TODO: run w/ real data
+    find_alerts_in_MWSC = False # added option b/c MWSC parsing is slow
 
     g18_maxsep = 10 # arcsec
 
-    if not os.path.exists(
-        '../results/Gagne_2018_TIC_crossmatched_{:d}arcsec_maxsep.csv'.
-        format(g18_maxsep)):
+    if do_Gagne18:
+        make_Gagne18_BANYAN_XI_TIC_crossmatch(maxsep=g18_maxsep)
 
-        make_Gagne18_TIC_crossmatch(maxsep=g18_maxsep)
+        if make_plots:
+            t = ascii.read(
+                '../results/Gagne_2018_BANYAN_XI_TIC_crossmatched_{:d}arcsec_maxsep.csv'.
+                format(g18_maxsep))
+            plot_xmatch_separations(t,
+                        '../results/Gagne18_BANYAN_XI_TIC_crossmatch_separations.png')
+            make_Gagne18_skymaps(t)
 
-    if make_plots:
-        t = ascii.read(
-            '../results/Gagne_2018_TIC_crossmatched_{:d}arcsec_maxsep.csv'.
-            format(g18_maxsep))
-        plot_xmatch_separations(t, '../results/Gagne18_TIC_crossmatch_separations.png')
-        make_Gagne18_skymaps(t)
-
-    do_Kharchenko = False
-
-    if do_Kharchenko:
-
+    if do_Kharchenko13:
         make_Kharchenko13_TIC_crossmatch()
 
         if make_plots:
@@ -426,5 +625,23 @@ if __name__ == '__main__':
                 plot_xmatch_separations(
                     t, fname.replace('.csv','_separationhist.png'))
 
-    #TODO: use real data, once it exists
-    crossmatch_alerts('../data/sector_0_TOI_list.txt')
+    if do_Oh17:
+        make_Oh17_TIC_crossmatch()
+    if do_Rizzuto15:
+        make_Rizzuto15_TIC_crossmatch()
+    if do_Rizzuto11:
+        make_Rizzuto11_TIC_crossmatch()
+    if do_Preibisch01:
+        make_Preibisch01_TIC_crossmatch()
+    if do_Luhman12:
+        make_Luhman12_TIC_crossmatch()
+
+    if find_which_alerts_are_interesting:
+
+        if not find_alerts_in_MWSC:
+            print(50*'#')
+            print('WARNING: ignoring MWSC lists!')
+            print(50*'#')
+
+        crossmatch_alerts('../data/sector_0_TOI_list.txt',
+                          find_alerts_in_MWSC=find_alerts_in_MWSC)

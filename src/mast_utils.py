@@ -2,6 +2,8 @@
 https://mast.stsci.edu/api/v0/MastApiTutorial.html
     and
 https://mast.stsci.edu/api/v0/pyex.html
+    and
+https://mast.stsci.edu/api/v0/_t_i_cfields.html
 '''
 
 import sys, os, time, re, json
@@ -41,11 +43,11 @@ def tic_single_object_crossmatch(ra, dec, radius):
                 "format":"json",
                 'removecache':True}
 
-    headers,outString = mast_query(request)
+    headers,out_string = mast_query(request)
 
-    outData = json.loads(outString)
+    out_data = json.loads(out_string)
 
-    return outData
+    return out_data
 
 
 def mast_query(request):
@@ -98,10 +100,10 @@ def tic_advanced_filter_search():
                         "values":[{"min":8.,"max":10.}]}]
                }}
 
-    headers,outString = mast_query(request)
-    outData = json.loads(outString)
+    headers,out_string = mast_query(request)
+    out_data = json.loads(out_string)
 
-    return outData
+    return out_data
 
 
 def tic_advanced_search_position():
@@ -121,8 +123,46 @@ def tic_advanced_search_position():
                    "radius": .2
                }}
 
-    headers,outString = mastQuery(request)
-    outData = json.loads(outString)
+    headers,out_string = mast_query(request)
+    out_data = json.loads(out_string)
 
-    return outData
+    return out_data
+
+
+def tic_cone_search():
+    request = { "service":"Mast.Catalogs.Tic.Cone",
+                "params":{
+                    "ra":254.28746,
+                    "dec":-4.09933,
+                    "radius":0.2},
+                "format":"json",
+                "timeout":10}
+
+    headers,out_string = mast_query(request)
+
+    out_data = json.loads(out_string)
+
+    return out_data
+
+
+def tic_gaia_id_xmatch(gaia_id):
+    '''
+    WARNING: this times out. Turns out, just directly crossmatching by position
+    on the MAST site is more effective. (At least, it's faster).
+    '''
+    request = {"service":"Mast.Catalogs.Filtered.Tic",
+               "format":"json",
+               "params":{
+                   "columns":"c.*",
+                   "filters":[
+                       {"paramName":"GAIA",
+                        "values":[{"min":-90.,"max":90.}]}
+                   ],
+                   "GAIA":str(gaia_id)
+               }}
+
+    headers,out_string = mast_query(request)
+    out_data = json.loads(out_string)
+
+    return out_data
 
