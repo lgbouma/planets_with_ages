@@ -263,6 +263,58 @@ def make_Rizzuto11_TIC_crossmatch():
                                table_num=table_num, outname=outname)
 
 
+def make_Kraus14_TIC_crossmatch():
+    '''
+    Adam Kraus et al (2014) did spectroscopy of members of the
+    Tucana-Horologium moving group, looking at RVs, Halpha emission, and Li
+    absoprtion.
+
+    WARNING: only ~70% of the rows in this table turned out to be members.
+
+    http://vizier.cfa.harvard.edu/viz-bin/VizieR?-source=J/AJ/147/146
+    '''
+    vizier_search_str = 'J/AJ/147/146'
+    table_num = 1
+    ra_str = '_RA'
+    dec_str = '_DE'
+    outname = '../data/Kraus_14_table_2_TucanaHorologiumMG_members.csv'
+
+    make_vizier_TIC_crossmatch(vizier_search_str, ra_str, dec_str,
+                               table_num=table_num, outname=outname)
+
+
+def make_Roser11_TIC_crossmatch():
+    '''
+    Roser et al (2011) used PPMXL (positions, propoer motions, and photometry
+    for 9e8 stars) to report Hyades members down to r<17.
+
+    http://vizier.cfa.harvard.edu/viz-bin/VizieR?-source=J/A+A/531/A92
+    '''
+    vizier_search_str = 'J/A+A/531/A92'
+    table_num = 0
+    ra_str = 'RAJ2000'
+    dec_str = 'DEJ2000'
+    outname = '../data/Roser11_table_1_Hyades_members.csv'
+
+    make_vizier_TIC_crossmatch(vizier_search_str, ra_str, dec_str,
+                               table_num=table_num, outname=outname)
+
+
+def make_Schlaufman14_TIC_crossmatch():
+    '''
+    Schlaufman & Casey (2014) used 
+
+    http://vizier.cfa.harvard.edu/viz-bin/VizieR?-source=J/A+A/531/A92
+    '''
+    vizier_search_str = 'J/A+A/531/A92'
+    table_num = 0
+    ra_str = 'RAJ2000'
+    dec_str = 'DEJ2000'
+    outname = '../data/Roser11_table_1_Hyades_members.csv'
+
+    make_vizier_TIC_crossmatch(vizier_search_str, ra_str, dec_str,
+                               table_num=table_num, outname=outname)
+
 def make_vizier_TIC_crossmatch(vizier_search_str, ra_str, dec_str, table_num=0,
                               outname=''):
     '''
@@ -526,5 +578,59 @@ def make_Gagne18_BANYAN_any_TIC_crossmatch(
                     int(maxsep_arcsec)),
                 format='ecsv')
 
+
+
+def make_Bell17_TIC_crossmatch():
+
+    import re
+
+    with open('../data/Bell_2017_32Ori_table_3.txt') as f:
+        lines = f.readlines()
+
+    lines = [l.replace('\n','') for l in lines if not l.startswith('#') and
+             len(l) > 200]
+
+    twomass_id_strs = []
+    for l in lines:
+        try:
+            twomass_id_strs.append(
+                re.search('[0-9]{8}.[0-9]{7}', l).group(0)
+            )
+        except:
+            print('skipping')
+            print(l)
+            continue
+
+    RA = [t[0:2]+'h'+t[2:4]+'m'+t[4:6]+'.'+t[6:8]
+              for t in twomass_id_strs
+         ]
+
+    DE = [t[8]+t[9:11]+'d'+t[11:13]+'m'+t[13:15]+'.'+t[15]
+              for t in twomass_id_strs
+         ]
+
+    c = SkyCoord(RA, DE, frame='icrs')
+
+    # MAST uploads need these two column names
+    foo = pd.DataFrame()
+    foo['RA'] = c.ra.value
+    foo['DEC'] = c.dec.value
+
+    outname = '../data/Bell_2017_32Ori_table_3_positions.csv'
+    foo.to_csv(outname,index=False)
+    print('saved {:s}'.format(outname))
+
+    print(
+    ''' I then uploaded these lists to MAST, and used their spatial
+        cross-matching with a 3 arcsecond cap, following
+            https://archive.stsci.edu/tess/tutorials/upload_list.html
+
+        This crossmatch is the output that I then saved to
+            {:s}
+    '''.format(
+        outname.
+        replace('data','results').
+        replace('.csv','_TIC_3arcsec_crossmatch_MAST.csv'))
+    )
 
 

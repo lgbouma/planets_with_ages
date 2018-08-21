@@ -12,6 +12,7 @@ Look for TIC ID alert matches in:
     * Kharchenko+2013 MWSC 1 sigma cluster members.
 
     An assortment of young-star / moving group lists:
+    * Bell_2017_32Ori_table_3_positions_TIC_3arcsec_crossmatch_MAST.csv
     * Gagne_2018_BANYAN_XIII_TIC_crossmatched_10arcsec_maxsep.csv
     * Gagne_2018_BANYAN_XII_TIC_crossmatched_10arcsec_maxsep.csv
     * Gagne_2018_BANYAN_XI_TIC_crossmatched_10arcsec_maxsep.csv
@@ -44,7 +45,8 @@ from crossmatch_catalogs_vs_TIC import make_Gagne18_BANYAN_XI_TIC_crossmatch, \
     make_Kharchenko13_TIC_crossmatch, make_Luhman12_TIC_crossmatch, \
     make_Oh17_TIC_crossmatch, make_Preibisch01_TIC_crossmatch, \
     make_Rizzuto11_TIC_crossmatch, make_Gagne18_BANYAN_XII_TIC_crossmatch, \
-    make_Gagne18_BANYAN_XIII_TIC_crossmatch
+    make_Gagne18_BANYAN_XIII_TIC_crossmatch, make_Bell17_TIC_crossmatch, \
+    make_Kraus14_TIC_crossmatch, make_Roser11_TIC_crossmatch
 
 from crossmatch_catalogs_vs_TIC import make_vizier_TIC_crossmatch
 
@@ -143,7 +145,7 @@ def crossmatch_alerts(ticidlist_path, sector_id=0, find_alerts_in_MWSC=True):
 if __name__ == '__main__':
 
     do_Kharchenko13 = False
-    do_BANYAN_XI= False
+    do_BANYAN_XI = False
     do_Oh17 = False
     do_Rizzuto15 = False
     do_Rizzuto11 = False
@@ -151,11 +153,14 @@ if __name__ == '__main__':
     do_Luhman12 = False
     do_BANYAN_XII= False
     do_BANYAN_XIII= False
+    do_Bell_17 = False
+    do_Kraus_14 = False
+    do_Roser_11 = True
+
+    find_which_alerts_are_interesting = False #TODO: run w/ real data
+    find_alerts_in_MWSC = False # added option b/c MWSC parsing is slow
 
     make_diagnostic_plots = False
-
-    find_which_alerts_are_interesting = True #TODO: run w/ real data
-    find_alerts_in_MWSC = False # added option b/c MWSC parsing is slow
 
     if do_Kharchenko13:
         make_Kharchenko13_TIC_crossmatch()
@@ -175,6 +180,12 @@ if __name__ == '__main__':
         make_Gagne18_BANYAN_XII_TIC_crossmatch()
     if do_BANYAN_XIII:
         make_Gagne18_BANYAN_XIII_TIC_crossmatch()
+    if do_Bell_17:
+        make_Bell17_TIC_crossmatch()
+    if do_Kraus_14:
+        make_Kraus14_TIC_crossmatch()
+    if do_Roser_11:
+        make_Roser11_TIC_crossmatch()
 
     if find_which_alerts_are_interesting:
 

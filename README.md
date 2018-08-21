@@ -17,7 +17,7 @@ src/
 ├── crossmatch_exoarchive_sanders.py - dl, xmatch exoarchive vs SD18
 ├── download_furlan_2017_results.py
 ├── exoarchive_age_plots.py - dl exoarchive and make scatter plots
-├── get_tess_alert_search_list.py - search alerts for K+13,G+18,K18
+├── get_tess_alert_search_list.py - search alerts for K+13,G+18,K18,etc
 ├── mast_examples.py
 ├── mast_utils.py - MAST utilities to interface with TIC
 ├── parse_MWSC.py - legacy code from TESS GI proposal to parse K+13
