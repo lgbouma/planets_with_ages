@@ -85,7 +85,7 @@ def plot_wellmeasuredparam(tab, finite_age_inds, wellmeasuredparam, logx, logy,
         xsel = arr(goodvals) < 2.5
     if 'pl_rade' in wellmeasuredparam:
         xsel = arr(goodvals) < 28
-    if 'iso_prad' in wellmeasuredparam and is_cks:
+    if 'giso_prad' in wellmeasuredparam and is_cks:
         xsel = arr(goodvals) < 3e1
     if 'koi_period' in wellmeasuredparam:
         xsel = arr(goodvals) < 2e2
@@ -129,7 +129,7 @@ def plot_wellmeasuredparam(tab, finite_age_inds, wellmeasuredparam, logx, logy,
         ax.set_xlabel(' '.join(wellmeasuredparam.split('_')))
     else:
         ax.set_xlabel(wellmeasuredparam)
-    if is_cks and 'iso_prad' in wellmeasuredparam:
+    if is_cks and 'giso_prad' in wellmeasuredparam:
         ax.set_xlabel('cks III planet radius [Re]')
     if is_cks and 'koi_dor' in wellmeasuredparam:
         ax.set_xlabel('KOI a/Rstar')
@@ -215,8 +215,8 @@ def plot_jankyparam(tab, finite_age_inds, jankyparam, logx, logy,
         goodvals_merr = np.abs(tab[jankyparam+'err2'][finite_age_inds])
     elif is_cks:
         if 'smet' in jankyparam:
-            goodvals_perr = tab['cks_smet_err1_VII'][finite_age_inds]
-            goodvals_merr = np.abs(tab['cks_smet_err2_VII'][finite_age_inds])
+            goodvals_perr = tab['cks_smet_err1'][finite_age_inds]
+            goodvals_merr = np.abs(tab['cks_smet_err2'][finite_age_inds])
         else:
             goodvals_perr = tab[jankyparam+'_err1'][finite_age_inds]
             goodvals_merr = np.abs(tab[jankyparam+'_err2'][finite_age_inds])
@@ -366,7 +366,7 @@ def make_age_histograms_get_f_inds(df, is_cks=True, outstr='', logage=False,
 def make_stacked_histograms(df, xparam='radius', logtime=False):
 
     if xparam=='radius':
-        xlabel='iso_prad'
+        xlabel='giso_prad'
     elif xparam=='period':
         xlabel='koi_period'
     elif xparam=='aoverRstar':
@@ -546,7 +546,7 @@ def make_quartile_scatter(df, xparam='koi_period'):
 
     for ix, ax in enumerate(axs):
 
-        ax.scatter(arr(df[xparam]), arr(df['iso_prad']),
+        ax.scatter(arr(df[xparam]), arr(df['giso_prad']),
                    zorder=1, marker='o', s=3, c='lightgray')
 
         if ix == 0:
@@ -563,15 +563,15 @@ def make_quartile_scatter(df, xparam='koi_period'):
             textstr = 'age=({:.2f},{:.2f})Gyr\nNtot={:d},Nblue={:d}\nfp={:.2f}'.format(
                 ages_percentiles[ix-1]/1e9,ages_percentiles[ix]/1e9,len(df),len(df[sel]),len(df[sel])/len(df))
 
-        ax.scatter(arr(df[xparam])[sel], arr(df['iso_prad'])[sel],
+        ax.scatter(arr(df[xparam])[sel], arr(df['giso_prad'])[sel],
                    marker='o', s=3, c='#1f77b4', zorder=2)
 
         ax.text(0.99, 0.99, textstr, horizontalalignment='right',
                 verticalalignment='top', transform=ax.transAxes,
                 fontsize='xx-small')
 
-        meanmetbin = np.mean(arr(df['cks_smet_VII'])[sel])
-        stdmetbin = np.std(arr(df['cks_smet_VII'])[sel])
+        meanmetbin = np.mean(arr(df['cks_smet'])[sel])
+        stdmetbin = np.std(arr(df['cks_smet'])[sel])
         meanmetstr = 'mean([Fe/H])={:.2f}\nstd([Fe/H])={:.2f}'.format(
                      meanmetbin, stdmetbin )
         ax.text(0.99, 0.01, meanmetstr, horizontalalignment='right',
@@ -601,10 +601,10 @@ def make_quartile_scatter(df, xparam='koi_period'):
     plt.grid(False)
     if xparam=='koi_period':
         plt.xlabel("orbital period [days]")
-        savpath = '../results/rp_vs_period_scatter_quartiles.pdf'
+        savpath = '../results/cks_age_scatter_percentiles/rp_vs_period_scatter_quartiles.pdf'
     elif xparam=='koi_dor':
         plt.xlabel("a/Rstar")
-        savpath = '../results/rp_vs_aoverRstar_scatter_quartiles.pdf'
+        savpath = '../results/cks_age_scatter_percentiles/rp_vs_aoverRstar_scatter_quartiles.pdf'
     plt.ylabel("planet radius [earth radii]")
 
     f.savefig(savpath, bbox_inches='tight')
@@ -669,7 +669,7 @@ def make_octile_scatter(df, xparam='koi_period'):
 
     for ix, ax in enumerate(axs):
 
-        ax.scatter(arr(df[xparam]), arr(df['iso_prad']),
+        ax.scatter(arr(df[xparam]), arr(df['giso_prad']),
                    zorder=1, marker='o', s=3, c='lightgray')
 
         if ix == 0:
@@ -686,7 +686,7 @@ def make_octile_scatter(df, xparam='koi_period'):
             textstr = 'age = ({:.2f},{:.2f})Gyr\nfp=12.5%'.format(
                 ages_octiles[ix]/1e9,ages_octiles[ix+1]/1e9)
 
-        ax.scatter(arr(df[xparam])[sel], arr(df['iso_prad'])[sel],
+        ax.scatter(arr(df[xparam])[sel], arr(df['giso_prad'])[sel],
                    marker='o', s=3, c='#1f77b4', zorder=2)
 
         ax.text(0.95, 0.95, textstr, horizontalalignment='right',
@@ -719,10 +719,10 @@ def make_octile_scatter(df, xparam='koi_period'):
     plt.grid(False)
     if xparam=='koi_period':
         plt.xlabel("orbital period [days]")
-        savpath = '../results/rp_vs_period_scatter_octiles.pdf'
+        savpath = '../results/cks_age_scatter_percentiles/rp_vs_period_scatter_octiles.pdf'
     elif xparam=='koi_dor':
         plt.xlabel("a/Rstar")
-        savpath = '../results/rp_vs_aoverRstar_scatter_octiles.pdf'
+        savpath = '../results/cks_age_scatter_percentiles/rp_vs_aoverRstar_scatter_octiles.pdf'
     plt.ylabel("planet radius [earth radii]")
 
     f.savefig(savpath, bbox_inches='tight')
@@ -746,8 +746,8 @@ def make_old_young_scatter(df, xparam='koi_period', metlow=None, methigh=None,
     if type(methigh)==float:
         metstr = 'cut on [Fe/H]=[{:.2f},{:.2f})'.format(metlow,methigh)
         print(metstr)
-        subsel = arr(df['cks_smet_VII']) < methigh
-        subsel &= arr(df['cks_smet_VII']) >= metlow
+        subsel = arr(df['cks_smet']) < methigh
+        subsel &= arr(df['cks_smet']) >= metlow
     elif type(logagehigh)==float:
         logagestr = 'cut on logage=[{:.2f},{:.2f})'.format(logagelow,logagehigh)
         print(logagestr)
@@ -759,7 +759,7 @@ def make_old_young_scatter(df, xparam='koi_period', metlow=None, methigh=None,
     df = df[subsel]
 
     ages = 10**arr(df['giso_slogage'])
-    mets = arr(df['cks_smet_VII'])
+    mets = arr(df['cks_smet'])
 
     #sep = 33.3333333
     sep = 25
@@ -778,7 +778,7 @@ def make_old_young_scatter(df, xparam='koi_period', metlow=None, methigh=None,
 
     for ix, ax in enumerate(axs):
 
-        ax.scatter(arr(df[xparam]), arr(df['iso_prad']),
+        ax.scatter(arr(df[xparam]), arr(df['giso_prad']),
                    zorder=1, marker='o', s=3, c='lightgray')
 
         if type(methigh)==float:
@@ -811,7 +811,7 @@ def make_old_young_scatter(df, xparam='koi_period', metlow=None, methigh=None,
                 textstr = 'Fe/H=({:.2f},{:.2f})\nNtot={:d},Nblue={:d}\n{:s}'.format(
                     sel_percentiles[ix],sel_percentiles[ix+1],len(df),int(len(df)*sep/100),logagestr)
 
-        ax.scatter(arr(df[xparam])[sel], arr(df['iso_prad'])[sel],
+        ax.scatter(arr(df[xparam])[sel], arr(df['giso_prad'])[sel],
                    marker='o', s=3, c='#1f77b4', zorder=2)
 
         ax.text(0.95, 0.95, textstr, horizontalalignment='right',
@@ -819,8 +819,8 @@ def make_old_young_scatter(df, xparam='koi_period', metlow=None, methigh=None,
                 fontsize='xx-small')
 
         if type(methigh)==float:
-            meanmetbin = np.mean(arr(df['cks_smet_VII'])[sel])
-            stdmetbin = np.std(arr(df['cks_smet_VII'])[sel])
+            meanmetbin = np.mean(arr(df['cks_smet'])[sel])
+            stdmetbin = np.std(arr(df['cks_smet'])[sel])
             meanmetstr = 'mean([Fe/H])={:.2f}\nstd([Fe/H])={:.2f}'.format(
                          meanmetbin, stdmetbin )
             ax.text(0.95, 0.04, meanmetstr, horizontalalignment='right',

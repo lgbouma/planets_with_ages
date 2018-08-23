@@ -36,10 +36,10 @@ indir=../results/cks_age_plots
 outdir=../results/best_cks_age_plots
 
 echo "copying best CKS plots"
-cp $indir/age_vs_log_iso_prad.png        $outdir/.
-cp $indir/age_vs_log_koi_period.png      $outdir/.
-cp $indir/log_age_vs_cks_smet_VII.png    $outdir/.
-cp $indir/log_age_vs_log_iso_prad.png    $outdir/.
-cp $indir/log_age_vs_log_koi_period.png  $outdir/.
-cp $indir/age_vs_log_koi_dor.png         $outdir/.
+cp $indir/age_vs_log_giso_prad.png        $outdir/.
+cp $indir/age_vs_log_koi_period.png       $outdir/.
+cp $indir/log_age_vs_cks_smet_VII.png     $outdir/.
+cp $indir/log_age_vs_log_giso_prad.png    $outdir/.
+cp $indir/log_age_vs_log_koi_period.png   $outdir/.
+cp $indir/age_vs_log_koi_dor.png          $outdir/.
 
