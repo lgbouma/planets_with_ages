@@ -16,7 +16,7 @@ from astropy.io import ascii
 
 from astroquery.vizier import Vizier
 
-import sys, os
+import sys, os, re
 from glob import glob
 
 from mast_utils import tic_single_object_crossmatch
@@ -300,21 +300,6 @@ def make_Roser11_TIC_crossmatch():
                                table_num=table_num, outname=outname)
 
 
-def make_Schlaufman14_TIC_crossmatch():
-    '''
-    Schlaufman & Casey (2014) used 
-
-    http://vizier.cfa.harvard.edu/viz-bin/VizieR?-source=J/A+A/531/A92
-    '''
-    vizier_search_str = 'J/A+A/531/A92'
-    table_num = 0
-    ra_str = 'RAJ2000'
-    dec_str = 'DEJ2000'
-    outname = '../data/Roser11_table_1_Hyades_members.csv'
-
-    make_vizier_TIC_crossmatch(vizier_search_str, ra_str, dec_str,
-                               table_num=table_num, outname=outname)
-
 def make_vizier_TIC_crossmatch(vizier_search_str, ra_str, dec_str, table_num=0,
                               outname=''):
     '''
@@ -579,10 +564,20 @@ def make_Gagne18_BANYAN_any_TIC_crossmatch(
                 format='ecsv')
 
 
+def make_Schalufman14_TIC_crossmatch():
+
+    print('nothing needed; the files he sent were ready to cross-mach on MAST')
+
+    print('saved to '
+          '../results/Schlaufman14_lowmet_highFP_'
+          'rate_TIC_3arcsec_crossmatch_MAST.csv')
+    print('saved to '
+          '../results/Schlaufman14_lowmet_lowFP_'
+          'rate_TIC_3arcsec_crossmatch_MAST.csv')
+    pass
+
 
 def make_Bell17_TIC_crossmatch():
-
-    import re
 
     with open('../data/Bell_2017_32Ori_table_3.txt') as f:
         lines = f.readlines()

@@ -22,6 +22,11 @@ Look for TIC ID alert matches in:
     * Rizzuto_11_table_1_ScoOB2_members_TIC_3arcsec_crossmatch_MAST.csv
     * Rizzuto_15_table_2_USco_PMS_TIC_crossmatched_3arcsec_MAST.csv
     * Rizzuto_15_table_3_USco_disks_TIC_crossmatched_3arcsec_MAST.csv
+    * Roser11_table_1_Hyades_members_TIC_3arcsec_crossmatch_MAST.csv
+
+    Other odd star lists:
+    * Schlaufman14_lowmet_highFP_rate_TIC_3arcsec_crossmatch_MAST.csv
+    * Schlaufman14_lowmet_lowFP_rate_TIC_3arcsec_crossmatch_MAST.csv
 '''
 from __future__ import division, print_function
 
@@ -46,7 +51,8 @@ from crossmatch_catalogs_vs_TIC import make_Gagne18_BANYAN_XI_TIC_crossmatch, \
     make_Oh17_TIC_crossmatch, make_Preibisch01_TIC_crossmatch, \
     make_Rizzuto11_TIC_crossmatch, make_Gagne18_BANYAN_XII_TIC_crossmatch, \
     make_Gagne18_BANYAN_XIII_TIC_crossmatch, make_Bell17_TIC_crossmatch, \
-    make_Kraus14_TIC_crossmatch, make_Roser11_TIC_crossmatch
+    make_Kraus14_TIC_crossmatch, make_Roser11_TIC_crossmatch, \
+    make_Schalufman14_TIC_crossmatch
 
 from crossmatch_catalogs_vs_TIC import make_vizier_TIC_crossmatch
 
@@ -155,9 +161,10 @@ if __name__ == '__main__':
     do_BANYAN_XIII= False
     do_Bell_17 = False
     do_Kraus_14 = False
-    do_Roser_11 = True
+    do_Roser_11 = False
+    do_Schlaufman_14 = False
 
-    find_which_alerts_are_interesting = False #TODO: run w/ real data
+    find_which_alerts_are_interesting = True #TODO: run w/ real data
     find_alerts_in_MWSC = False # added option b/c MWSC parsing is slow
 
     make_diagnostic_plots = False
@@ -186,6 +193,8 @@ if __name__ == '__main__':
         make_Kraus14_TIC_crossmatch()
     if do_Roser_11:
         make_Roser11_TIC_crossmatch()
+    if do_Schlaufman_14:
+        make_Schalufman14_TIC_crossmatch()
 
     if find_which_alerts_are_interesting:
 
