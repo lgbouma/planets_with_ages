@@ -41,20 +41,20 @@ import astropy.units as u
 def arr(x):
     return np.array(x)
 
-def plot_wellmeasuredparam(tab, finite_age_inds, wellmeasuredparam, logx, logy,
+def plot_wellmeasuredparam(tab, finite_age_inds, xparam, logx, logy,
                            is_exoarchive=False, is_cks=False,
                            is_sandersdas=False):
     '''
     args:
         tab (DataFrame or astropy table)
         finite_age_inds
-        wellmeasuredparam (str): thing you want to scatter plot again age
+        xparam (str): thing you want to scatter plot again age
 
     kwargs:
         only one of is_exoarchive, is_cks, is_sandersdas should be true.
     '''
 
-    goodvals = tab[wellmeasuredparam][finite_age_inds]
+    goodvals = tab[xparam][finite_age_inds]
 
     # only one of is_exoarchive, is_cks, or is_sandersdas should be True.
     assert np.sum(np.array([(is_exoarchive != is_cks),
@@ -79,22 +79,22 @@ def plot_wellmeasuredparam(tab, finite_age_inds, wellmeasuredparam, logx, logy,
     # only plot planets with P < 1e4, or Rp<2.5Rj. this requires some
     # sick nparray formation tricks.
     xsel = -1
-    if 'pl_orbper' in wellmeasuredparam:
+    if 'pl_orbper' in xparam:
         xsel = arr(goodvals) < 1e4
-    if 'pl_radj' in wellmeasuredparam:
+    if 'pl_radj' in xparam:
         xsel = arr(goodvals) < 2.5
-    if 'pl_rade' in wellmeasuredparam:
+    if 'pl_rade' in xparam:
         xsel = arr(goodvals) < 28
-    if 'giso_prad' in wellmeasuredparam and is_cks:
+    if 'giso_prad' in xparam and is_cks:
         xsel = arr(goodvals) < 3e1
-    if 'koi_period' in wellmeasuredparam:
+    if 'koi_period' in xparam:
         xsel = arr(goodvals) < 2e2
-    if 'koi_dor' in wellmeasuredparam:
+    if 'koi_dor' in xparam:
         xsel = arr(goodvals) < 178
 
 
     if type(xsel) != int:
-        # you selected by some criterion in wellmeasuredparam
+        # you selected by some criterion in xparam
         xvals, yvals = arr(goodvals[xsel]), arr(ages[xsel])
         ages_perr = arr(ages_perr[xsel])
         ages_merr = arr(ages_merr[xsel])
@@ -125,13 +125,13 @@ def plot_wellmeasuredparam(tab, finite_age_inds, wellmeasuredparam, logx, logy,
                 elinewidth=0.3, ecolor='k', capsize=0, capthick=0,
                 linewidth=0, fmt='s', ms=0, zorder=2, alpha=0.05)
 
-    if '_' in wellmeasuredparam:
-        ax.set_xlabel(' '.join(wellmeasuredparam.split('_')))
+    if '_' in xparam:
+        ax.set_xlabel(' '.join(xparam.split('_')))
     else:
-        ax.set_xlabel(wellmeasuredparam)
-    if is_cks and 'giso_prad' in wellmeasuredparam:
-        ax.set_xlabel('cks III planet radius [Re]')
-    if is_cks and 'koi_dor' in wellmeasuredparam:
+        ax.set_xlabel(xparam)
+    if is_cks and 'giso_prad' in xparam:
+        ax.set_xlabel('cks VII planet radius [Re]')
+    if is_cks and 'koi_dor' in xparam:
         ax.set_xlabel('KOI a/Rstar')
     if is_exoarchive:
         ax.set_ylabel('age [gyr] (from exoarchive)')
@@ -160,21 +160,23 @@ def plot_wellmeasuredparam(tab, finite_age_inds, wellmeasuredparam, logx, logy,
     elif is_cks:
         savdir = '../results/cks_age_plots/'
 
-    fname_pdf = logystr+'age_vs_'+logxstr+wellmeasuredparam+'.pdf'
+    fname_pdf = logystr+'age_vs_'+logxstr+xparam+'.pdf'
     fname_png = fname_pdf.replace('.pdf','.png')
     f.savefig(savdir+fname_pdf)
     print('saved {:s}'.format(fname_pdf))
     f.savefig(savdir+fname_png, dpi=250)
 
 
-def plot_jankyparam(tab, finite_age_inds, jankyparam, logx, logy,
+def plot_jankyparam(tab, finite_age_inds, xparam, logx, logy,
                     is_exoarchive=False, is_cks=False, is_sandersdas=False,
                     outpdfpath=None, elw=0.3, ealpha=0.05):
     '''
+    x axis: "xparam". y axis: age.
+
     args:
         tab (DataFrame or astropy table)
         finite_age_inds
-        wellmeasuredparam (str): thing you want to scatter plot again age, with
+        xparam (str): thing you want to scatter plot again age, with
             two-sided errors.
 
     kwargs:
@@ -208,18 +210,18 @@ def plot_jankyparam(tab, finite_age_inds, jankyparam, logx, logy,
     ages_errs = np.array(
             [ages_perr, ages_merr]).reshape(2, len(ages))
 
-    goodvals = tab[jankyparam][finite_age_inds]
+    goodvals = tab[xparam][finite_age_inds]
 
     if is_exoarchive or is_sandersdas:
-        goodvals_perr = tab[jankyparam+'err1'][finite_age_inds]
-        goodvals_merr = np.abs(tab[jankyparam+'err2'][finite_age_inds])
+        goodvals_perr = tab[xparam+'err1'][finite_age_inds]
+        goodvals_merr = np.abs(tab[xparam+'err2'][finite_age_inds])
     elif is_cks:
-        if 'smet' in jankyparam:
+        if 'smet' in xparam:
             goodvals_perr = tab['cks_smet_err1'][finite_age_inds]
             goodvals_merr = np.abs(tab['cks_smet_err2'][finite_age_inds])
         else:
-            goodvals_perr = tab[jankyparam+'_err1'][finite_age_inds]
-            goodvals_merr = np.abs(tab[jankyparam+'_err2'][finite_age_inds])
+            goodvals_perr = tab[xparam+'_err1'][finite_age_inds]
+            goodvals_merr = np.abs(tab[xparam+'_err2'][finite_age_inds])
     else:
         raise NotImplementedError
 
@@ -244,10 +246,10 @@ def plot_jankyparam(tab, finite_age_inds, jankyparam, logx, logy,
                 capsize=0, capthick=0, linewidth=0, fmt='s', ms=0,
                 zorder=1, alpha=ealpha)
 
-    if '_' in jankyparam:
-        ax.set_xlabel(' '.join(jankyparam.split('_')))
+    if '_' in xparam:
+        ax.set_xlabel(' '.join(xparam.split('_')))
     else:
-        ax.set_xlabel(jankyparam)
+        ax.set_xlabel(xparam)
 
     if is_exoarchive:
         ax.set_ylabel('age [gyr] (from exoarchive)')
@@ -266,9 +268,9 @@ def plot_jankyparam(tab, finite_age_inds, jankyparam, logx, logy,
 
     if not logy:
         ax.set_ylim([0,14])
-    if 'orbincl' in jankyparam:
+    if 'orbincl' in xparam:
         ax.set_xlim([75,93])
-    if 'eccen' in jankyparam:
+    if 'eccen' in xparam:
         ax.set_xlim([-0.05,1.05])
 
     f.tight_layout()
@@ -285,7 +287,7 @@ def plot_jankyparam(tab, finite_age_inds, jankyparam, logx, logy,
     else:
         raise NotImplementedError
 
-    fname_pdf = logystr+'age_vs_'+logxstr+jankyparam+'.pdf'
+    fname_pdf = logystr+'age_vs_'+logxstr+xparam+'.pdf'
     fname_png = fname_pdf.replace('.pdf','.png')
     if outpdfpath:
         f.savefig(outpdfpath)
@@ -477,7 +479,7 @@ def make_stacked_histograms(df, xparam='radius', logtime=False):
         ax.get_xaxis().set_tick_params(which='both', direction='in')
 
     if xparam=='radius':
-        ax.set_xlabel('CKS III planet radius [Re]')
+        ax.set_xlabel('CKS VII planet radius [Re]')
     elif xparam=='period':
         ax.set_xlabel('KOI period [d] (less than 180d)')
     elif xparam=='aoverRstar':
@@ -878,3 +880,120 @@ def make_old_young_scatter(df, xparam='koi_period', metlow=None, methigh=None,
     f.savefig(savpath.replace('.pdf','.png'), dpi=300, bbox_inches='tight')
 
     print('made {:s}'.format(savpath))
+
+
+def plot_scatter(tab, finite_age_inds, xparam, yparam, logx, logy,
+                 is_cks=True):
+    '''
+    args:
+        tab (DataFrame or astropy table)
+        finite_age_inds
+        yparam (str): preferably 'giso_slogage' or 'cks_smet'
+        xparam (str): thing you want to scatter plot against
+
+    kwargs:
+        only one of is_exoarchive, is_cks, is_sandersdas should be true.
+    '''
+
+    goodvals = tab[xparam][finite_age_inds]
+
+    if is_cks:
+        if yparam=='giso_slogage':
+            yvals = 10**(tab['giso_slogage'][finite_age_inds])
+            yvals_perr = 10**(tab['giso_slogage_err1'][finite_age_inds])
+            yvals_merr = 10**(np.abs(tab['giso_slogage_err2'][finite_age_inds]))
+        elif yparam=='cks_smet':
+            yvals = tab[yparam][finite_age_inds]
+            yvals_perr = tab[yparam][finite_age_inds]
+            yvals_merr = tab[yparam][finite_age_inds]
+    else:
+        raise NotImplementedError
+
+    # only plot planets with P < 1e4, or Rp<2.5Rj. this requires some
+    # sick nparray formation tricks.
+    xsel = -1
+    if 'pl_orbper' in xparam:
+        xsel = arr(goodvals) < 1e4
+    if 'pl_radj' in xparam:
+        xsel = arr(goodvals) < 2.5
+    if 'pl_rade' in xparam:
+        xsel = arr(goodvals) < 28
+    if 'giso_prad' in xparam and is_cks:
+        xsel = arr(goodvals) < 3e1
+    if 'koi_period' in xparam:
+        xsel = arr(goodvals) < 2e2
+    if 'koi_dor' in xparam:
+        xsel = arr(goodvals) < 178
+
+    if type(xsel) != int:
+        # you selected by some criterion in xparam
+        xvals, yvals = arr(goodvals[xsel]), arr(yvals[xsel])
+        yvals_perr = arr(yvals_perr[xsel])
+        yvals_merr = arr(yvals_merr[xsel])
+        yvals_errs = np.array(
+                [yvals_perr, yvals_merr]).reshape(2, len(yvals[xsel]))
+        yerrs = yvals_errs
+
+    else:
+        xvals, yvals = arr(goodvals), arr(yvals)
+        yvals_errs = np.array(
+                [yvals_perr, yvals_merr]).reshape(2, len(yvals))
+        yerrs = yvals_errs
+
+    if is_cks and not logy and 'age' in yparam:
+        yvals /= 1e9
+    if is_cks and logy and 'age' in yparam:
+        yerrs *= 1e9
+
+    plt.close('all')
+    f, ax = plt.subplots(figsize=(8,6))
+
+    # squares
+    ax.errorbar(xvals, yvals,
+                elinewidth=0, ecolor='k', capsize=0, capthick=0,
+                linewidth=0, fmt='s', ms=3, zorder=1)
+    # error bars
+    ax.errorbar(xvals, yvals, yerr=yerrs,
+                elinewidth=0.3, ecolor='k', capsize=0, capthick=0,
+                linewidth=0, fmt='s', ms=0, zorder=2, alpha=0.05)
+
+    if '_' in xparam:
+        ax.set_xlabel(' '.join(xparam.split('_')))
+    else:
+        ax.set_xlabel(xparam)
+    if is_cks and 'giso_prad' in xparam:
+        ax.set_xlabel('cks VII planet radius [Re]')
+    if is_cks and 'koi_dor' in xparam:
+        ax.set_xlabel('KOI a/Rstar')
+    if is_cks:
+        ax.set_ylabel(yparam.replace('_',' '))
+
+    if logy:
+        ax.set_yscale('log')
+    if logx:
+        ax.set_xscale('log')
+
+    if not logy and 'age' in yparam:
+        ax.set_ylim([0,14])
+    elif not logy and 'smet' in yparam and 'prad' in xparam:
+        ax.set_ylim([-0.2,0.4])
+        ax.set_xlim([0.3,20])
+
+    f.tight_layout()
+
+    logystr = 'log_' if logy else ''
+    logxstr = 'log_' if logx else ''
+
+    if is_cks and 'age' in yparam:
+        savdir = '../results/cks_age_plots/'
+    elif is_cks and 'age' not in yparam:
+        savdir = '../results/cks_scatter_plots/'
+
+    fname_pdf = logystr+yparam+'_vs_'+logxstr+xparam+'.pdf'
+    fname_png = fname_pdf.replace('.pdf','.png')
+    f.savefig(savdir+fname_pdf)
+    print('saved {:s}'.format(fname_pdf))
+    f.savefig(savdir+fname_png, dpi=250)
+
+
+

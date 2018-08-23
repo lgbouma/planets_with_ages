@@ -54,7 +54,7 @@ import astropy.constants as c
 from age_plots import plot_wellmeasuredparam, plot_jankyparam, \
     make_age_histograms_get_f_inds, make_stacked_histograms, \
     make_quartile_scatter, make_boxplot_koi_count, make_octile_scatter, \
-    make_old_young_scatter
+    make_old_young_scatter, plot_scatter
 
 from download_furlan_2017_results import \
         download_furlan_radius_correction_table
@@ -101,17 +101,16 @@ def _get_cks_data():
 
     df_II = pd.read_csv('../data/cks_physical_merged.csv')
 
-    df = pd.merge(df_VII_planets, df_VII_stars, how='left', on='id_starname',
+    _ = pd.merge(df_VII_planets, df_VII_stars, how='left', on='id_starname',
                   suffixes=('_VII_p', '_VII_s'))
 
+    # pull non-changed stellar parameters from CKS II
     subcols = ['kic_kepmag', 'id_starname', 'cks_fp', 'koi_impact',
-               'koi_count', 'koi_dor']
+               'koi_count', 'koi_dor', 'koi_model_snr']
 
-    df = pd.merge(df, df_II[subcols], how='left',
-                  on='id_starname',
-                  suffixes=('_VII', '_II'))
-
-    #import IPython; IPython.embed()
+    # avoid duplication, otherwise you get mixed merge
+    df = pd.merge(_, df_II[subcols].drop_duplicates(subset=['id_starname']),
+                  how='left', on='id_starname')
 
     # logg is not included, so we must calculate it
     M = np.array(df['giso_smass'])*u.Msun
@@ -185,23 +184,14 @@ def _apply_cks_IV_metallicity_study_filters(df):
 
 if __name__ == '__main__':
 
-    #plot_wellmeasured = False
-    #plot_janky = False
-    #plot_boxplot = False
-    #plot_stacked_histograms = False
-    #plot_quartile_scatter = False
-    #plot_octile_scatter = False
-    #plot_metallicity_controlled = False
-    #plot_metallicity_controlled_pcttiles = True
-
     plot_wellmeasured = False
     plot_janky = False
-    plot_boxplot = True
-    plot_stacked_histograms = True
-    plot_quartile_scatter = True
-    plot_octile_scatter = True
-    plot_metallicity_controlled = True
-    plot_metallicity_controlled_pcttiles = True
+    plot_boxplot = False
+    plot_stacked_histograms = False
+    plot_quartile_scatter = False
+    plot_octile_scatter = False
+    plot_metallicity_controlled = False
+    plot_metallicity_controlled_pcttiles = False
 
     if plot_wellmeasured:
         print('plotting well measured params...')
@@ -219,18 +209,18 @@ if __name__ == '__main__':
 
     for logy in [True, False]:
         for logx in [True, False]:
-            for goodparam in goodparams:
+            for xparam in goodparams:
                 if not plot_wellmeasured:
                     continue
-                plot_wellmeasuredparam(df, sel, goodparam, logx, logy,
+                plot_wellmeasuredparam(df, sel, xparam, logx, logy,
                                        is_cks=True)
 
     for logy in [True, False]:
         for logx in [True, False]:
-            for jankyparam in jankyparams:
+            for xparam in jankyparams:
                 if not plot_janky:
                     continue
-                plot_jankyparam(df, sel, jankyparam, logx, logy, is_cks=True)
+                plot_jankyparam(df, sel, xparam, logx, logy, is_cks=True)
 
     if plot_boxplot:
         print('making koi count boxplot')
@@ -293,4 +283,7 @@ if __name__ == '__main__':
                                    logagehigh=logage[1])
             #make_old_young_scatter(df, xparam='koi_dor', metlow=met[0],
             #                       methigh=met[1])
+
+
+    plot_scatter(df, sel, 'giso_prad', 'cks_smet', True, False, is_cks=True)
 
