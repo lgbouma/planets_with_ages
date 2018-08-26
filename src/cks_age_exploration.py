@@ -101,16 +101,21 @@ def _get_cks_data():
 
     df_II = pd.read_csv('../data/cks_physical_merged.csv')
 
-    _ = pd.merge(df_VII_planets, df_VII_stars, how='left', on='id_starname',
+    df_m = pd.merge(df_VII_planets, df_VII_stars, how='left', on='id_starname',
                   suffixes=('_VII_p', '_VII_s'))
 
-    # pull non-changed stellar parameters from CKS II
+    # pull non-changed stellar parameters from CKS II (needed for filters)
     subcols = ['kic_kepmag', 'id_starname', 'cks_fp', 'koi_impact',
-               'koi_count', 'koi_dor', 'koi_model_snr']
+               'koi_count', 'koi_dor', 'koi_model_snr', 'id_koicand']
 
-    # avoid duplication, otherwise you get mixed merge
-    df = pd.merge(_, df_II[subcols].drop_duplicates(subset=['id_starname']),
-                  how='left', on='id_starname')
+    df = pd.merge(df_m, df_II[subcols], how='left', on='id_koicand',
+                  suffixes=('_VII', '_II'))
+
+    assert np.array_equal(arr(df['id_starname_VII']),
+                          arr(df['id_starname_II']))
+    df['id_starname'] = df['id_starname_VII']
+    df = df.drop('id_starname_VII', 1)
+    df = df.drop('id_starname_II', 1)
 
     # logg is not included, so we must calculate it
     M = np.array(df['giso_smass'])*u.Msun
