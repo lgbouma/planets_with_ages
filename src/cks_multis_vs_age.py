@@ -23,6 +23,12 @@ system multiplicity function, for high and low metallicity CKS systems.)
 
 --> Answer: hardly at all
 
+4. We know that the period ratio P2/P1 tends to be larger than average when P1
+is less than about 2-3 days. Perhaps this is due to tides. Scatter P2/P1 vs P1,
+for different age quartiles. Do the same, for different metallicity quartiles.
+
+--> Answer: there are some effects. (!)
+
 USAGE
 ----------
 
@@ -30,7 +36,7 @@ $ python cks_multis_vs_age.py
 
 '''
 import matplotlib as mpl
-mpl.use('Agg')
+#mpl.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd, numpy as np
 import os
@@ -54,6 +60,7 @@ from download_furlan_2017_results import \
 
 from cks_age_exploration import _get_cks_data, arr
 
+
 def _get_Weiss18_table1_stats(df):
 
     # number of transiting planets in sample
@@ -73,6 +80,7 @@ def _get_Weiss18_table1_stats(df):
     N_tpmulti = len(multis)
 
     return N_tp, N_star, N_tpmulti
+
 
 def _apply_cks_VI_metallicity_study_filters(df):
     '''
@@ -95,7 +103,7 @@ def _apply_cks_VI_metallicity_study_filters(df):
     rows.append(_get_Weiss18_table1_stats(df[sel]))
 
     # radius correction factor <5%, logical or not given in Furlan+2017 table.
-    sel &= ( (arr(df['Avg']) < 1.05) | (~np.isfinite(df['Avg']) ) )
+    sel &= ( (arr(df['fur17_rcorr_avg']) < 1.05) | (~np.isfinite(df['fur17_rcorr_avg']) ) )
     rows.append(_get_Weiss18_table1_stats(df[sel]))
 
     # not grazing (b<0.9)
@@ -109,8 +117,8 @@ def _apply_cks_VI_metallicity_study_filters(df):
     rows.append(_get_Weiss18_table1_stats(df[sel]))
 
     # Rp < 22.4 Re
-    sel &= np.isfinite(arr(df['iso_prad']))
-    sel &= arr(df['iso_prad']) < 22.4
+    sel &= np.isfinite(arr(df['giso_prad']))
+    sel &= arr(df['giso_prad']) < 22.4
     rows.append(_get_Weiss18_table1_stats(df[sel]))
 
     # You need finite ages, too
@@ -119,6 +127,25 @@ def _apply_cks_VI_metallicity_study_filters(df):
 
     for row in rows:
         print(row)
+
+    weiss_18_table_1 = [
+        (1944,1222,1176),
+        (1788,1118,1092),
+        (1700,1060,1042),
+        (1563,990,940),
+        (1495,952,908),
+        (1491,948,892),
+    ]
+
+    for rowind, wrow in enumerate(weiss_18_table_1):
+        if wrow == rows[rowind]:
+            print('row {:d} matches Weiss+18 Table 1'.format(rowind))
+        elif np.abs(np.sum(wrow) - np.sum(rows[rowind])) < 10:
+            print('row {:d} is close (w/in 10 planets) of Weiss+18 Table 1'.
+                  format(rowind))
+        else:
+            print('row {:d} is quite different from Weiss+18 Table 1'.
+                  format(rowind))
 
     return sel
 
@@ -168,7 +195,7 @@ def split_weiss18_fig1_high_low_met(df, sel):
     system_df = df[sel].iloc[u_inds] # length: number of systems. unique stellar properties here!
 
     # get metallicities for systems with at least two planets
-    smet_VII = arr(system_df['cks_smet_VII'])[(counts>=2)]
+    smet_VII = arr(system_df['cks_smet'])[(counts>=2)]
     med_smet = np.median(smet_VII)
 
     sel_highmet = (smet_VII > med_smet)
@@ -231,7 +258,10 @@ def get_all_planet_pairs(df, sel):
           'pair_inner_sma': [],
           'pair_outer_sma': [],
           'n_planet_in_sys':[],
-          'pair_ind':[]}
+          'pair_ind':[],
+          'pair_inner_period':[],
+          'pair_outer_period':[]
+        }
 
     pair_ind = 0
     for sname in np.unique(df[sel]['id_starname']):
@@ -242,7 +272,7 @@ def get_all_planet_pairs(df, sel):
             continue
 
         # smallest semimaj axis at top. use gaia+cks+isochrone constrained vals.
-        this_sys = this_sys.sort_values('iso_sma').reset_index()
+        this_sys = this_sys.sort_values('giso_sma').reset_index()
 
         N_adj_pairs = len(this_sys) - 1
 
@@ -252,7 +282,7 @@ def get_all_planet_pairs(df, sel):
                 float(np.unique(this_sys['giso_smass']))
             )
             d['s_met'].append(
-                float(np.unique(this_sys['cks_smet_VII']))
+                float(np.unique(this_sys['cks_smet']))
             )
             d['s_logage'].append(
                 float(np.unique(this_sys['giso_slogage']))
@@ -261,19 +291,25 @@ def get_all_planet_pairs(df, sel):
                 int(len(this_sys))
             )
             d['pair_inner_radius'].append(
-                float(this_sys.ix[ix]['iso_prad'])
+                float(this_sys.ix[ix]['giso_prad'])
             )
             d['pair_outer_radius'].append(
-                float(this_sys.ix[ix+1]['iso_prad'])
+                float(this_sys.ix[ix+1]['giso_prad'])
             )
             d['pair_inner_sma'].append(
-                float(this_sys.ix[ix]['iso_sma'])
+                float(this_sys.ix[ix]['giso_sma'])
             )
             d['pair_outer_sma'].append(
-                float(this_sys.ix[ix+1]['iso_sma'])
+                float(this_sys.ix[ix+1]['giso_sma'])
             )
             d['pair_ind'].append(
                 pair_ind
+            )
+            d['pair_inner_period'].append(
+                float(this_sys.ix[ix]['koi_period'])
+            )
+            d['pair_outer_period'].append(
+                float(this_sys.ix[ix+1]['koi_period'])
             )
 
             pair_ind += 1
@@ -300,7 +336,7 @@ def get_system_innermost_sma_by_Rstar(df, sel):
             continue
 
         # smallest semimaj axis at top. use gaia+cks+isochrone constrained vals.
-        this_sys = this_sys.sort_values('iso_sma').reset_index()
+        this_sys = this_sys.sort_values('giso_sma').reset_index()
 
         N_adj_pairs = len(this_sys) - 1
 
@@ -308,7 +344,7 @@ def get_system_innermost_sma_by_Rstar(df, sel):
             float(np.unique(this_sys['giso_smass']))
         )
         d['s_met'].append(
-            float(np.unique(this_sys['cks_smet_VII']))
+            float(np.unique(this_sys['cks_smet']))
         )
         d['s_logage'].append(
             float(np.unique(this_sys['giso_slogage']))
@@ -317,7 +353,7 @@ def get_system_innermost_sma_by_Rstar(df, sel):
             int(len(this_sys))
         )
         d['sys_innermost_sma_by_rstar'].append(
-            ((float(np.min(this_sys['iso_sma']))*u.AU) /
+            ((float(np.min(this_sys['giso_sma']))*u.AU) /
             (float(np.unique(this_sys['giso_srad']))*u.Rsun)).cgs.value
         )
 
@@ -580,34 +616,204 @@ def make_stackedhist_innermost_sma(systems):
     print('made {:s}'.format(savpath))
 
 
+def scatter_p2byp1_vs_p1(pairs):
+    # the period ratio P2/P1 tends to be larger than average when P1 is less
+    # than about 2-3 days
+
+    P1 = arr(pairs['pair_inner_period'])
+    P2 = arr(pairs['pair_outer_period'])
+
+    plt.close('all')
+    f,ax = plt.subplots(figsize=(8,6))
+
+    ax.scatter(P1, P2/P1, marker='o', s=5, c='#1f77b4', zorder=2)
+
+    ax.get_yaxis().set_tick_params(which='both', direction='in')
+    ax.get_xaxis().set_tick_params(which='both', direction='in')
+
+    ax.set_xlabel('$P_1$, inner period of planet pair [days]',
+                  fontsize='medium')
+    ax.set_ylabel('$P_2/P_1$, ratio of planet pair periods',
+                  fontsize='medium')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    savpath = '../results/cks_multis_vs_age/scatter_p2byp1_vs_p1.pdf'
+
+    f.tight_layout(h_pad=0, w_pad=0)
+    f.savefig(savpath, bbox_inches='tight')
+
+    print('made {:s}'.format(savpath))
+
+
+
+def scatter_p2byp1_vs_p1_metallicity_percentiles(pairs):
+
+    P1 = arr(pairs['pair_inner_period'])
+    P2 = arr(pairs['pair_outer_period'])
+    smet = arr(pairs['s_met'])
+    slogage = arr(pairs['s_logage'])
+
+    sep = 25
+    smet_pctls = [np.percentile(smet, pct) for pct in np.arange(0,100+sep,sep)]
+
+    slogage_pctls = [np.percentile(slogage, pct) for pct in
+                     np.arange(0,100+25,25)]
+
+    # plot pairs by stellar metallicity percentiles
+    plt.close('all')
+    f,axs = plt.subplots(nrows=2, ncols=2, figsize=(8,6), sharex=True,
+                         sharey=True)
+    axs = axs.flatten()
+
+    for ix, ax in enumerate(axs[::-1]):
+        ax.scatter(P1, P2/P1, marker='o', s=5, c='lightgray', zorder=1)
+
+        if ix == 0:
+            sel = smet < smet_pctls[ix+1]
+            textstr = 'Fe/H$<${:.2f}\ntot={:d},blue={:d}'.format(
+                smet_pctls[ix+1],len(pairs),int(len(pairs)*sep/100))
+        elif ix == len(axs)-1:
+            sel = smet > smet_pctls[ix]
+            textstr = 'Fe/H$>${:.2f}\ntot={:d},blue={:d}'.format(
+                smet_pctls[ix],len(pairs),int(len(pairs)*sep/100))
+        else:
+            sel = smet >= smet_pctls[ix]
+            sel &= smet < smet_pctls[ix+1]
+            textstr = 'Fe/H=({:.2f},{:.2f})\ntot={:d},blue={:d}'.format(
+                smet_pctls[ix],smet_pctls[ix+1],len(pairs),int(len(pairs)*sep/100))
+
+        ax.scatter(P1[sel], P2[sel]/P1[sel],
+                   marker='o', s=3, c='#1f77b4', zorder=2)
+
+        ax.text(0.95, 0.95, textstr, horizontalalignment='right',
+                verticalalignment='top', transform=ax.transAxes,
+                fontsize='xx-small')
+
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlim([0.4,300])
+        ax.set_xlim([0.9,102])
+        ax.get_yaxis().set_tick_params(which='both', direction='in')
+        ax.get_xaxis().set_tick_params(which='both', direction='in')
+
+    f.tight_layout(h_pad=0, w_pad=0)
+
+    # set labels
+    f.add_subplot(111, frameon=False)
+    plt.tick_params(labelcolor='none', top=False, bottom=False, left=False,
+                    right=False)
+    plt.grid(False)
+    plt.xlabel('$P_1$, inner period of planet pair [days]', fontsize='medium')
+    plt.ylabel('$P_2/P_1$, ratio of planet pair periods', fontsize='medium')
+
+    savpath = '../results/cks_multis_vs_age/scatter_p2byp1_vs_p1_metallicity_percentiles.pdf'
+
+    f.tight_layout(h_pad=0, w_pad=0)
+    f.savefig(savpath, bbox_inches='tight')
+
+    print('made {:s}'.format(savpath))
+
+
+def scatter_p2byp1_vs_p1_age_percentiles(pairs):
+
+    P1 = arr(pairs['pair_inner_period'])
+    P2 = arr(pairs['pair_outer_period'])
+    smet = arr(pairs['s_met'])
+    slogage = arr(pairs['s_logage'])
+
+    sep = 25
+    smet_pctls = [np.percentile(smet, pct) for pct in np.arange(0,100+sep,sep)]
+
+    slogage_pctls = [np.percentile(slogage, pct) for pct in
+                     np.arange(0,100+25,25)]
+
+    # plot pairs by stellar age percentiles
+    plt.close('all')
+    f,axs = plt.subplots(nrows=2, ncols=2, figsize=(8,6), sharex=True,
+                         sharey=True)
+    axs = axs.flatten()
+
+    for ix, ax in enumerate(axs):
+        ax.scatter(P1, P2/P1, marker='o', s=5, c='lightgray', zorder=1)
+
+        if ix == 0:
+            sel = slogage < slogage_pctls[ix+1]
+            textstr = 'logage$<${:.2f}\ntot={:d},blue={:d}'.format(
+                slogage_pctls[ix+1],len(pairs),int(len(pairs)*sep/100))
+        elif ix == len(axs)-1:
+            sel = slogage > slogage_pctls[ix]
+            textstr = 'logage$>${:.2f}\ntot={:d},blue={:d}'.format(
+                slogage_pctls[ix],len(pairs),int(len(pairs)*sep/100))
+        else:
+            sel = slogage >= slogage_pctls[ix]
+            sel &= slogage < slogage_pctls[ix+1]
+            textstr = 'logage=({:.2f},{:.2f})\ntot={:d},blue={:d}'.format(
+                slogage_pctls[ix],slogage_pctls[ix+1],len(pairs),int(len(pairs)*sep/100))
+
+        ax.scatter(P1[sel], P2[sel]/P1[sel],
+                   marker='o', s=3, c='#1f77b4', zorder=2)
+
+        ax.text(0.95, 0.95, textstr, horizontalalignment='right',
+                verticalalignment='top', transform=ax.transAxes,
+                fontsize='xx-small')
+
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlim([0.4,300])
+        ax.set_xlim([0.9,102])
+        ax.get_yaxis().set_tick_params(which='both', direction='in')
+        ax.get_xaxis().set_tick_params(which='both', direction='in')
+
+    f.tight_layout(h_pad=0, w_pad=0)
+
+    # set labels
+    f.add_subplot(111, frameon=False)
+    plt.tick_params(labelcolor='none', top=False, bottom=False, left=False,
+                    right=False)
+    plt.grid(False)
+    plt.xlabel('$P_1$, inner period of planet pair [days]', fontsize='medium')
+    plt.ylabel('$P_2/P_1$, ratio of planet pair periods', fontsize='medium')
+
+    savpath = '../results/cks_multis_vs_age/scatter_p2byp1_vs_p1_age_percentiles.pdf'
+
+    f.tight_layout(h_pad=0, w_pad=0)
+    f.savefig(savpath, bbox_inches='tight')
+
+    print('made {:s}'.format(savpath))
+
 
 
 if __name__ == '__main__':
 
-    #NOTE: your planet radii are not actually using the CKS VII stellar radii
-    # correctly. this is WRONG.
+    make_fig1_and_split = False
+    make_fig6_weiss17 = False
+    make_stackedhist_innermost = False
 
     df = _get_cks_data()
-
     sel = _apply_cks_VI_metallicity_study_filters(df)
+    pairs = get_all_planet_pairs(df, sel)
+    pairs = compute_pair_separations_hill_radii(pairs)
+    systems = get_system_innermost_sma_by_Rstar(df, sel)
 
-    make_fig1_and_split = True
     if make_fig1_and_split:
+        # How does the average number of transiting planets per stellar system
+        # change with metallicity? 
         make_weiss18_VI_fig1(df, sel)
         split_weiss18_fig1_high_low_met(df, sel)
 
-    # compute average separation between planet pairs in multis (in units of
-    # mutual hill radii). does it increase for the oldest multis?
-
-    pairs = get_all_planet_pairs(df, sel)
-    pairs = compute_pair_separations_hill_radii(pairs)
-
-    make_fig6_weiss17 = True
     if make_fig6_weiss17:
+        # Does average separation between planet pairs in multis (in units of
+        # mutual hill radii increase for the oldest multis?
         make_weiss17_V_fig6(pairs)
         split_weiss17_V_fig6_by_age(pairs)
 
-    systems = get_system_innermost_sma_by_Rstar(df, sel)
-    # Does the innermost planet of a multi tend to be detected further away
-    # from the host star in the oldest systems?
-    make_stackedhist_innermost_sma(systems)
+    if make_stackedhist_innermost:
+        # Does the innermost planet of a multi tend to be detected further away
+        # from the host star in the oldest systems?
+        make_stackedhist_innermost_sma(systems)
+
+    # Scatter P2/P1 vs P1, for different age quartiles.
+    scatter_p2byp1_vs_p1(pairs)
+    scatter_p2byp1_vs_p1_metallicity_percentiles(pairs)
+    scatter_p2byp1_vs_p1_age_percentiles(pairs)

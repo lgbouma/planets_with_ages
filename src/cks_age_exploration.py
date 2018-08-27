@@ -189,14 +189,14 @@ def _apply_cks_IV_metallicity_study_filters(df):
 
 if __name__ == '__main__':
 
-    plot_wellmeasured = False
-    plot_janky = False
-    plot_boxplot = False
-    plot_stacked_histograms = False
-    plot_quartile_scatter = False
-    plot_octile_scatter = False
-    plot_metallicity_controlled = False
-    plot_metallicity_controlled_pcttiles = False
+    plot_wellmeasured = True
+    plot_janky = True
+    plot_boxplot = True
+    plot_stacked_histograms = True
+    plot_quartile_scatter = True
+    plot_octile_scatter = True
+    plot_metallicity_controlled = True
+    plot_metallicity_controlled_pcttiles = True
 
     if plot_wellmeasured:
         print('plotting well measured params...')

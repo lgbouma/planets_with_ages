@@ -43,3 +43,8 @@ cp $indir/log_age_vs_log_giso_prad.png    $outdir/.
 cp $indir/log_age_vs_log_koi_period.png   $outdir/.
 cp $indir/age_vs_log_koi_dor.png          $outdir/.
 
+indir=../results/cks_scatter_plots
+cp $indir/cks_smet_vs_log_giso_prad.png          $outdir/.
+
+indir=../results/cks_age_hist_precision
+cp $indir/age_hist_cks.pdf          $outdir/.
