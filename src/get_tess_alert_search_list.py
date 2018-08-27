@@ -27,6 +27,9 @@ Look for TIC ID alert matches in:
     Other odd star lists:
     * Schlaufman14_lowmet_highFP_rate_TIC_3arcsec_crossmatch_MAST.csv
     * Schlaufman14_lowmet_lowFP_rate_TIC_3arcsec_crossmatch_MAST.csv
+
+usage:
+    $ python get_tess_alert_search_list.py
 '''
 from __future__ import division, print_function
 
@@ -52,7 +55,7 @@ from crossmatch_catalogs_vs_TIC import make_Gagne18_BANYAN_XI_TIC_crossmatch, \
     make_Rizzuto11_TIC_crossmatch, make_Gagne18_BANYAN_XII_TIC_crossmatch, \
     make_Gagne18_BANYAN_XIII_TIC_crossmatch, make_Bell17_TIC_crossmatch, \
     make_Kraus14_TIC_crossmatch, make_Roser11_TIC_crossmatch, \
-    make_Schalufman14_TIC_crossmatch
+    make_Schalufman14_TIC_crossmatch, make_Casagrande_11_TIC_crossmatch
 
 from crossmatch_catalogs_vs_TIC import make_vizier_TIC_crossmatch
 
@@ -89,10 +92,8 @@ def make_Gagne18_skymaps(t):
 
 def crossmatch_alerts(ticidlist_path, sector_id=0, find_alerts_in_MWSC=True):
     '''
-    take a list of TIC IDs from MIT alerts. do they overlap with any of:
-        * Kharchenko+13's clusters
-        * Gagne+18's associations
-        * Kane's known planet list
+    take a list of TIC IDs from MIT alerts. do they overlap with any of the
+    lists we have that are interesting?
 
     args: ticidlist_path, a path to a newline-separated list of TICIDs of
         interest. no header info is assumed.
@@ -103,6 +104,9 @@ def crossmatch_alerts(ticidlist_path, sector_id=0, find_alerts_in_MWSC=True):
 
     # make list of all files with TIC crossmatches that we will search
     searchfiles = np.sort(glob('../results/*crossmatch*.csv'))
+
+    # look through anything that is a GI target
+    searchfiles = np.append(searchfiles, glob('../data/GI_S0??.csv'))
 
     if find_alerts_in_MWSC:
         mtxdir = '../results/MWSC_TIC_crossmatched/'
@@ -124,7 +128,17 @@ def crossmatch_alerts(ticidlist_path, sector_id=0, find_alerts_in_MWSC=True):
         # extended csv format assumed. if regular csv, that works too.
         t = ascii.read(sf)
 
-        t_inds = np.in1d(t['MatchID'], TOIids)
+        try:
+            ticid_key = 'MatchID'
+            _ = t[ticid_key]
+        except KeyError:
+            try:
+                ticid_key = 'TICID'
+                _ = t[ticid_key]
+            except KeyError:
+                raise KeyError
+
+        t_inds = np.in1d(t[ticid_key], TOIids)
 
         if len(t[t_inds])>0:
 
@@ -132,11 +146,22 @@ def crossmatch_alerts(ticidlist_path, sector_id=0, find_alerts_in_MWSC=True):
 
             print('got {:d} matches in {:s}'.format(len(overlap), sf))
 
-            df = pd.DataFrame(
-                {'ticid':overlap['MatchID'],
-                 'dstArcSec':overlap['dstArcSec'],
-                 'path':np.repeat(sf,len(overlap))
-                })
+            if ticid_key == 'MatchID':
+                df = pd.DataFrame(
+                    {'ticid':overlap[ticid_key],
+                     'dstArcSec':overlap['dstArcSec'],
+                     'path':np.repeat(sf,len(overlap)),
+                     'keywords':np.repeat(np.nan, len(overlap))
+                    })
+            elif ticid_key == 'TICID':
+                df = pd.DataFrame(
+                    {'ticid':overlap[ticid_key],
+                     'dstArcSec':np.repeat(np.nan, len(overlap)),
+                     'keywords':overlap['Keywords'],
+                     'path':np.repeat(sf,len(overlap))
+                    })
+            else:
+                raise NotImplementedError
 
             if not os.path.exists(savdir+savname):
                 df.to_csv(savdir+savname,index=False,header='column_names')
@@ -163,6 +188,7 @@ if __name__ == '__main__':
     do_Kraus_14 = False
     do_Roser_11 = False
     do_Schlaufman_14 = False
+    do_Casagrande_11 = False
 
     find_which_alerts_are_interesting = True #TODO: run w/ real data
     find_alerts_in_MWSC = False # added option b/c MWSC parsing is slow
@@ -195,6 +221,9 @@ if __name__ == '__main__':
         make_Roser11_TIC_crossmatch()
     if do_Schlaufman_14:
         make_Schalufman14_TIC_crossmatch()
+    if do_Casagrande_11:
+        make_Casagrande_11_TIC_crossmatch()
+
 
     if find_which_alerts_are_interesting:
 

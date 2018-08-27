@@ -300,6 +300,60 @@ def make_Roser11_TIC_crossmatch():
                                table_num=table_num, outname=outname)
 
 
+def make_Casagrande_11_TIC_crossmatch():
+    '''
+    Casagrande et al (2011) re-analyzed the Geneva-Copenhagen survey, and got a
+    kinematically unbiased sample of solar neighborhood stars with kinematics,
+    metallicites, and ages.
+
+    If Casagrande's reported max likelihood ages (from Padova isochrones) are
+    below 1 Gyr, then that's interesting enough to look into.
+
+    NOTE that this age cut introduces serious biases into the stellar mass
+    distribution -- see Casagrande+2011, Figure 14.
+
+    http://vizier.cfa.harvard.edu/viz-bin/VizieR?-source=J/A+A/530/A138
+    '''
+    vizier_search_str = 'J/A+A/530/A138'
+    table_num = 0
+    ra_str = 'RAJ2000'
+    dec_str = 'DEJ2000'
+    outname = '../data/Casagrande_2011_table_1_GCS_ages_lt_1Gyr.csv'
+
+    Vizier.ROW_LIMIT = -1
+    catalog_list = Vizier.find_catalogs(vizier_search_str)
+    catalogs = Vizier.get_catalogs(catalog_list.keys())
+
+    tab = catalogs[0]
+
+    # ageMLP: max-likelihood padova isochrone ages
+    # ageMLB: max-likelihood BASTI isochrone ages. not queried.
+    sel = (tab['ageMLP'] > 0)
+    sel &= (tab['ageMLP'] < 1)
+
+    coords = SkyCoord(ra=tab[ra_str], dec=tab[dec_str], frame='icrs',
+                      unit=(u.hourangle, u.deg))
+    # MAST uploads need these two column names
+    tab['RA'] = coords.ra.value
+    tab['DEC'] = coords.dec.value
+    tab.remove_column('RAJ2000')
+    tab.remove_column('DEJ2000')
+
+    foo = tab[sel].to_pandas()
+    foo.to_csv(outname,index=False)
+    print('saved {:s}'.format(outname))
+
+    print(
+    ''' I then uploaded these lists to MAST, and used their spatial
+        cross-matching with a 3 arcsecond cap, following
+            https://archive.stsci.edu/tess/tutorials/upload_list.html
+
+        This crossmatch is the output that I then saved to
+            {:s}
+    '''.format(outname.replace('data','results').replace('.csv','_TIC_3arcsec_crossmatch_MAST.csv'))
+    )
+
+
 def make_vizier_TIC_crossmatch(vizier_search_str, ra_str, dec_str, table_num=0,
                               outname=''):
     '''
@@ -627,5 +681,6 @@ def make_Bell17_TIC_crossmatch():
         replace('data','results').
         replace('.csv','_TIC_3arcsec_crossmatch_MAST.csv'))
     )
+
 
 
