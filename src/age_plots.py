@@ -38,6 +38,8 @@ from astropy.io import ascii
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 
+import os
+
 def arr(x):
     return np.array(x)
 
@@ -159,6 +161,9 @@ def plot_wellmeasuredparam(tab, finite_age_inds, xparam, logx, logy,
         savdir = '../results/sd18_age_plots{:s}/'.format(savdir_append)
     elif is_cks:
         savdir = '../results/cks_age_plots{:s}/'.format(savdir_append)
+    if not os.path.exists(savdir):
+        os.mkdir(savdir)
+
 
     fname_pdf = logystr+'age_vs_'+logxstr+xparam+'.pdf'
     fname_png = fname_pdf.replace('.pdf','.png')
@@ -286,6 +291,8 @@ def plot_jankyparam(tab, finite_age_inds, xparam, logx, logy,
         savdir = '../results/cks_age_plots{:s}/'.format(savdir_append)
     else:
         raise NotImplementedError
+    if not os.path.exists(savdir):
+        os.mkdir(savdir)
 
     fname_pdf = logystr+'age_vs_'+logxstr+xparam+'.pdf'
     fname_png = fname_pdf.replace('.pdf','.png')
@@ -337,6 +344,9 @@ def make_age_histograms_get_f_inds(df, is_cks=True, outstr='', logage=False,
     plt.xlim([0,2])
     plt.ylabel('count')
     plt.tight_layout()
+
+    if not os.path.exists(savdir):
+        os.mkdir(savdir)
     plt.savefig(savdir+'sigmaage_by_age_hist_cks{:s}.pdf'.format(outstr))
 
     plt.close('all')
@@ -494,6 +504,9 @@ def make_stacked_histograms(df, xparam='radius', logtime=False,
 
     f.tight_layout(h_pad=-0.9)
 
+    if not os.path.exists(savdir):
+        os.mkdir(savdir)
+
     if logtime:
         savpath = savdir+'stackedhist_log_time_vs_{:s}.pdf'.format(xparam)
     else:
@@ -531,6 +544,8 @@ def make_quartile_scatter(df, xparam='koi_period',
         xparam: 'koi_period' or 'koi_dor' (a/Rstar)
 
     '''
+    if not os.path.exists(savdir):
+        os.mkdir(savdir)
 
     ages = 10**arr(df['giso_slogage'])
 
@@ -723,6 +738,9 @@ def make_octile_scatter(df, xparam='koi_period',
     plt.tick_params(labelcolor='none', top=False, bottom=False, left=False,
                     right=False)
     plt.grid(False)
+
+    if not os.path.exists(savdir):
+        os.mkdir(savdir)
     if xparam=='koi_period':
         plt.xlabel("orbital period [days]")
         savpath = savdir+'rp_vs_period_scatter_octiles.pdf'
@@ -738,7 +756,8 @@ def make_octile_scatter(df, xparam='koi_period',
 
 
 def make_old_young_scatter(df, xparam='koi_period', metlow=None, methigh=None,
-                          logagehigh=None, logagelow=None):
+                          logagehigh=None, logagelow=None,
+                          savdir='../results/cks_age_scatter_percentiles/'):
     '''
     option 1: set methigh and metlow.
         Then this fixes the metallicity. And scatter plots Rp vs Porb,
@@ -854,27 +873,30 @@ def make_old_young_scatter(df, xparam='koi_period', metlow=None, methigh=None,
     plt.tick_params(labelcolor='none', top=False, bottom=False, left=False,
                     right=False)
     plt.grid(False)
+
+    if not os.path.exists(savdir):
+        os.mkdir(savdir)
     if type(methigh)==float:
         if xparam=='koi_period':
             plt.xlabel("orbital period [days]")
-            savpath = '../results/cks_age_scatter_percentiles/rp_vs_period_'+\
+            savpath = savdir+'rp_vs_period_'+\
                       'metlow{:.2f}_methigh{:.2f}_scatter_percentiles.pdf'.format(
                       metlow,methigh)
         elif xparam=='koi_dor':
             plt.xlabel("a/Rstar")
-            savpath = '../results/cks_age_scatter_percentiles/rp_vs_aoverRstar_'+\
+            savpath = savdir+'rp_vs_aoverRstar_'+\
                       'metlow{:.2f}_methigh{:.2f}_scatter_percentiles.pdf'.format(
                       metlow,methigh)
 
     elif type(logagehigh)==float:
         if xparam=='koi_period':
             plt.xlabel("orbital period [days]")
-            savpath = '../results/cks_age_scatter_percentiles/rp_vs_period_'+\
+            savpath = savdir+'rp_vs_period_'+\
                       'logagelow{:.2f}_logagehigh{:.2f}_scatter_percentiles.pdf'.format(
                       logagelow,logagehigh)
         elif xparam=='koi_dor':
             plt.xlabel("a/Rstar")
-            savpath = '../results/cks_age_scatter_percentiles/rp_vs_aoverRstar_'+\
+            savpath = savdir+'rp_vs_aoverRstar_'+\
                       'logagelow{:.2f}_logagehigh{:.2f}_scatter_percentiles.pdf'.format(
                       logagelow,logagehigh)
 
@@ -987,6 +1009,9 @@ def plot_scatter(tab, finite_age_inds, xparam, yparam, logx, logy,
 
     logystr = 'log_' if logy else ''
     logxstr = 'log_' if logx else ''
+
+    if not os.path.exists(savdir):
+        os.mkdir(savdir)
 
     fname_pdf = logystr+yparam+'_vs_'+logxstr+xparam+'.pdf'
     fname_png = fname_pdf.replace('.pdf','.png')
