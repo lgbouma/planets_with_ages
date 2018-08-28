@@ -8,11 +8,13 @@ for them. It also runs the cross-match against an input list of alert TIC IDs.
 
 Look for TIC ID alert matches in:
 
-    * Stephen Kane's known planet list.
+    * the GI target lists
+    * Stephen Kane's known planet list. (somewhat redunant).
     * Kharchenko+2013 MWSC 1 sigma cluster members.
 
     An assortment of young-star / moving group lists:
     * Bell_2017_32Ori_table_3_positions_TIC_3arcsec_crossmatch_MAST.csv
+    * Casagrande_2011_table_1_GCS_ages_lt_1Gyr_TIC_3arcsec_crossmatch_MAST.csv
     * Gagne_2018_BANYAN_XIII_TIC_crossmatched_10arcsec_maxsep.csv
     * Gagne_2018_BANYAN_XII_TIC_crossmatched_10arcsec_maxsep.csv
     * Gagne_2018_BANYAN_XI_TIC_crossmatched_10arcsec_maxsep.csv
@@ -175,6 +177,9 @@ def crossmatch_alerts(ticidlist_path, sector_id=0, find_alerts_in_MWSC=True):
 
 if __name__ == '__main__':
 
+    find_which_alerts_are_interesting = True
+    find_alerts_in_MWSC = False # NOTE: are you checking MWSC too?
+
     do_Kharchenko13 = False
     do_BANYAN_XI = False
     do_Oh17 = False
@@ -189,9 +194,6 @@ if __name__ == '__main__':
     do_Roser_11 = False
     do_Schlaufman_14 = False
     do_Casagrande_11 = False
-
-    find_which_alerts_are_interesting = True #TODO: run w/ real data
-    find_alerts_in_MWSC = False # added option b/c MWSC parsing is slow
 
     make_diagnostic_plots = False
 
@@ -252,4 +254,3 @@ if __name__ == '__main__':
             t = ascii.read(fname)
             plot_xmatch_separations(
                 t, fname.replace('.csv','_separationhist.png'))
-
