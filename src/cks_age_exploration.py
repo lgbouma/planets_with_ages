@@ -106,7 +106,8 @@ def _get_cks_data():
 
     # pull non-changed stellar parameters from CKS II (needed for filters)
     subcols = ['kic_kepmag', 'id_starname', 'cks_fp', 'koi_impact',
-               'koi_count', 'koi_dor', 'koi_model_snr', 'id_koicand']
+               'koi_count', 'koi_dor', 'koi_model_snr', 'id_koicand',
+               'id_kic', 'koi_steff', 'koi_slogg']
 
     df = pd.merge(df_m, df_II[subcols], how='left', on='id_koicand',
                   suffixes=('_VII', '_II'))
@@ -116,6 +117,68 @@ def _get_cks_data():
     df['id_starname'] = df['id_starname_VII']
     df = df.drop('id_starname_VII', 1)
     df = df.drop('id_starname_II', 1)
+
+    # Get gaia astrometric excess noise significance. see:
+    # https://gea.esac.esa.int/archive/documentation/GDR2/Gaia_archive/chap_datamodel/sec_dm_main_tables/ssec_dm_gaia_source.html
+    # By default, the 1 arcsecond crossmatch leads to some KIC IDs having
+    # multiple entries in the Gaia catalog's crossmatch.  We first make
+    # `cgk_idm`, the CKS-gaia-kepler ID merge. This has duplicates when there
+    # are multiple <1 arcsec crossmatch overlaps with same KICID.  For purposes
+    # of assigning a gaia astrometric excess noise significance *ONLY*, we
+    # assign the closest Gaia matching star in separation to the given KIC
+    # coordinates.
+
+    gaia_kepler_fun_dir = '/home/luke/local/gaia-kepler_fun_crossmatch/'
+    fun_file = 'kepler_dr2_1arcsec.fits'
+    gk = Table.read(gaia_kepler_fun_dir+fun_file, format='fits')
+
+    gcols = ['astrometric_excess_noise_sig','kepid','kepler_gaia_ang_dist',
+             'teff', 'logg', 'kepmag', 'phot_g_mean_mag', 'teff_val']
+    gkp = gk[gcols].to_pandas()
+
+    cgk_idm = pd.merge(df, gkp, how='left', left_on=['id_kic'],
+                       right_on=['kepid'], indicator=True)
+
+    cks_kicids = arr(df['id_kic'])
+    cgk_idm_kicids = arr(cgk_idm['id_kic'])
+
+    u_cks, inv_cks, counts_cks = np.unique(cks_kicids,
+                                           return_inverse=True,
+                                           return_counts=True)
+
+    u_cgk_idm, inv_cgk_idm, counts_cgk_idm = np.unique(cgk_idm_kicids,
+                                                       return_inverse=True,
+                                                       return_counts=True)
+
+    different_ids = u_cks[counts_cgk_idm - counts_cks != 0]
+
+    # take the closest star in separation (with the same assigned kicid) as the
+    # host star, for Gaia astrometric excess noise identification purposes.
+    cgk_idm_s = cgk_idm.sort_values(['id_koicand', 'kepler_gaia_ang_dist'])
+    cgk_idm_cut = cgk_idm_s.drop_duplicates(subset=['id_koicand'], keep='first')
+
+    del df
+    df = cgk_idm_cut
+
+    ##########################################
+    ## # I checked that I did the Gaia merge right...
+    ## df_scols = ['cks_fp', 'fur17_rcorr_avg', 'koi_steff', 'koi_slogg',
+    ##             'kic_kepmag']
+
+    ## baz_scols = ['cks_fp', 'fur17_rcorr_avg', 'koi_steff', 'koi_slogg',
+    ##             'kic_kepmag', 'kepler_gaia_ang_dist']
+
+    ## for different_id in different_ids:
+
+    ##     print(df[df['id_kic']==different_id][df_scols])
+
+    ##     print(gkp[gkp['kepid']==different_id])
+
+    ##     print(baz[baz['kepid']==different_id][baz_scols])
+
+    ##     print(50*'#')
+    ##     print('\n')
+    ##########################################
 
     # logg is not included, so we must calculate it
     M = np.array(df['giso_smass'])*u.Msun
@@ -127,23 +190,25 @@ def _get_cks_data():
 
     df['selected'] = sel
 
-    # nb. no need to match against Furlan17; 'fur17_rcorr_avg' has the relevant
-    # column already.
+    ##########################################
+    ## I previously matched against Furlan17; but 'fur17_rcorr_avg' has the
+    ## relevant column already.
 
-    ### # get Furlan+ 2017 table. Format in id_starname in same 0-padded foramt
-    ### # as CKS.
-    ### furlan_fname = '../data/Furlan_2017_table9.csv'
-    ### if not os.path.exists(furlan_fname):
-    ###     download_furlan_radius_correction_table()
-    ### f17 = pd.read_csv(furlan_fname)
-    ### f17['id_starname'] = arr( ['K'+'{0:05d}'.format(koi) for koi in
-    ###                            arr(f17['KOI'])] )
-    ### # sanity check that above works, i.e. that "id_starname" is just the KOI
-    ### # number with strings padded.
-    ### assert np.array_equal(arr(df['id_starname']),
-    ###                       arr([n[:-3] for n in arr(df['id_koicand'])]) )
+    ## # get Furlan+ 2017 table. Format in id_starname in same 0-padded foramt
+    ## # as CKS.
+    ## furlan_fname = '../data/Furlan_2017_table9.csv'
+    ## if not os.path.exists(furlan_fname):
+    ##     download_furlan_radius_correction_table()
+    ## f17 = pd.read_csv(furlan_fname)
+    ## f17['id_starname'] = arr( ['K'+'{0:05d}'.format(koi) for koi in
+    ##                            arr(f17['KOI'])] )
+    ## # sanity check that above works, i.e. that "id_starname" is just the KOI
+    ## # number with strings padded.
+    ## assert np.array_equal(arr(df['id_starname']),
+    ##                       arr([n[:-3] for n in arr(df['id_koicand'])]) )
 
-    ### df = pd.merge(df, f17, how='left', on='id_starname', suffixes=('cks','f17'))
+    ## df = pd.merge(df, f17, how='left', on='id_starname', suffixes=('cks','f17'))
+    ##########################################
 
     return df
 
