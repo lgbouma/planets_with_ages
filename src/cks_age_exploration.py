@@ -27,8 +27,8 @@ Select your desired plots from
     plot_janky = False
     plot_boxplot = False
     plot_stacked_histograms = False
-    plot_quartile_scatter = True
-    plot_octile_scatter = True
+    plot_quartile_scatter = False
+    plot_octile_scatter = False
 
 then
 
@@ -252,7 +252,7 @@ def _apply_cks_IV_metallicity_study_filters(df):
     return sel
 
 
-if __name__ == '__main__':
+def _main_cks_IV_filters():
 
     plot_wellmeasured = True
     plot_janky = True
@@ -272,7 +272,9 @@ if __name__ == '__main__':
     sel = _apply_cks_IV_metallicity_study_filters(df)
 
     # raw exploration plots
-    _ = arr(make_age_histograms_get_f_inds(df[sel]))
+    _ = arr(make_age_histograms_get_f_inds(
+                df[sel], savdir='../results/cks_age_hist_precision/')
+    )
 
     goodparams = ['koi_period', 'giso_prad', 'koi_count','koi_dor']
     jankyparams = ['cks_smet']
@@ -283,14 +285,15 @@ if __name__ == '__main__':
                 if not plot_wellmeasured:
                     continue
                 plot_wellmeasuredparam(df, sel, xparam, logx, logy,
-                                       is_cks=True)
+                                       is_cks=True, savdir_append='')
 
     for logy in [True, False]:
         for logx in [True, False]:
             for xparam in jankyparams:
                 if not plot_janky:
                     continue
-                plot_jankyparam(df, sel, xparam, logx, logy, is_cks=True)
+                plot_jankyparam(df, sel, xparam, logx, logy, is_cks=True,
+                                savdir_append='')
 
     if plot_boxplot:
         print('making koi count boxplot')
@@ -301,20 +304,37 @@ if __name__ == '__main__':
     ######################
     if plot_stacked_histograms:
         print('plotting stacked histograms')
-        make_stacked_histograms(df[sel], logtime=True, xparam='aoverRstar')
-        make_stacked_histograms(df[sel], logtime=False, xparam='aoverRstar')
-        make_stacked_histograms(df[sel], logtime=True, xparam='period')
-        make_stacked_histograms(df[sel], logtime=False, xparam='period')
-        make_stacked_histograms(df[sel], logtime=False, xparam='radius')
-        make_stacked_histograms(df[sel], logtime=True, xparam='radius')
+        make_stacked_histograms(df[sel], logtime=True, xparam='aoverRstar',
+                                savdir='../results/cks_age_explorn_stackedhist/')
+
+        make_stacked_histograms(df[sel], logtime=False, xparam='aoverRstar',
+                                savdir='../results/cks_age_explorn_stackedhist/')
+
+        make_stacked_histograms(df[sel], logtime=True, xparam='period',
+                                savdir='../results/cks_age_explorn_stackedhist/')
+
+        make_stacked_histograms(df[sel], logtime=False, xparam='period',
+                                savdir='../results/cks_age_explorn_stackedhist/')
+
+        make_stacked_histograms(df[sel], logtime=False, xparam='radius',
+                                savdir='../results/cks_age_explorn_stackedhist/')
+
+        make_stacked_histograms(df[sel], logtime=True, xparam='radius',
+                                savdir='../results/cks_age_explorn_stackedhist/')
 
     if plot_quartile_scatter:
-        make_quartile_scatter(df[sel], xparam='koi_period')
-        make_quartile_scatter(df[sel], xparam='koi_dor')
+        make_quartile_scatter(df[sel], xparam='koi_period',
+                              savdir='../results/cks_age_scatter_percentiles/')
+
+        make_quartile_scatter(df[sel], xparam='koi_dor',
+                              savdir='../results/cks_age_scatter_percentiles/')
 
     if plot_octile_scatter:
-        make_octile_scatter(df[sel], xparam='koi_period')
-        make_octile_scatter(df[sel], xparam='koi_dor')
+        make_octile_scatter(df[sel], xparam='koi_period',
+                            savdir='../results/cks_age_scatter_percentiles/')
+
+        make_octile_scatter(df[sel], xparam='koi_dor',
+                            savdir='../results/cks_age_scatter_percentiles/')
 
     # try to control for metallicity
     if plot_metallicity_controlled:
@@ -355,5 +375,10 @@ if __name__ == '__main__':
             #                       methigh=met[1])
 
 
-    plot_scatter(df, sel, 'giso_prad', 'cks_smet', True, False, is_cks=True)
+    plot_scatter(df, sel, 'giso_prad', 'cks_smet', True, False, is_cks=True,
+                 savdir='../results/cks_scatter_plots/')
 
+
+if __name__ == '__main__':
+
+    _main_cks_IV_filters()

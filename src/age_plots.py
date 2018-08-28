@@ -43,7 +43,7 @@ def arr(x):
 
 def plot_wellmeasuredparam(tab, finite_age_inds, xparam, logx, logy,
                            is_exoarchive=False, is_cks=False,
-                           is_sandersdas=False):
+                           is_sandersdas=False, savdir_append=''):
     '''
     args:
         tab (DataFrame or astropy table)
@@ -154,11 +154,11 @@ def plot_wellmeasuredparam(tab, finite_age_inds, xparam, logx, logy,
     logxstr = 'log_' if logx else ''
 
     if is_exoarchive:
-        savdir = '../results/exoarchive_age_plots/'
+        savdir = '../results/exoarchive_age_plots{:s}/'.format(savdir_append)
     elif is_sandersdas:
-        savdir = '../results/sd18_age_plots/'
+        savdir = '../results/sd18_age_plots{:s}/'.format(savdir_append)
     elif is_cks:
-        savdir = '../results/cks_age_plots/'
+        savdir = '../results/cks_age_plots{:s}/'.format(savdir_append)
 
     fname_pdf = logystr+'age_vs_'+logxstr+xparam+'.pdf'
     fname_png = fname_pdf.replace('.pdf','.png')
@@ -169,7 +169,7 @@ def plot_wellmeasuredparam(tab, finite_age_inds, xparam, logx, logy,
 
 def plot_jankyparam(tab, finite_age_inds, xparam, logx, logy,
                     is_exoarchive=False, is_cks=False, is_sandersdas=False,
-                    outpdfpath=None, elw=0.3, ealpha=0.05):
+                    outpdfpath=None, elw=0.3, ealpha=0.05, savdir_append=''):
     '''
     x axis: "xparam". y axis: age.
 
@@ -279,11 +279,11 @@ def plot_jankyparam(tab, finite_age_inds, xparam, logx, logy,
     logxstr = 'log_' if logx else ''
 
     if is_exoarchive:
-        savdir = '../results/exoarchive_age_plots/'
-    elif is_cks:
-        savdir = '../results/cks_age_plots//'
+        savdir = '../results/exoarchive_age_plots{:s}/'.format(savdir_append)
     elif is_sandersdas:
-        savdir = '../results/sd18_age_plots/'
+        savdir = '../results/sd18_age_plots{:s}/'.format(savdir_append)
+    elif is_cks:
+        savdir = '../results/cks_age_plots{:s}/'.format(savdir_append)
     else:
         raise NotImplementedError
 
@@ -300,7 +300,8 @@ def plot_jankyparam(tab, finite_age_inds, xparam, logx, logy,
 
 
 def make_age_histograms_get_f_inds(df, is_cks=True, outstr='', logage=False,
-                                   actually_make_plots=True):
+                                   actually_make_plots=True,
+                                   savdir='../results/cks_age_hist_precision/'):
     '''
     Saves to
         '../results/sigmaage_by_age_hist_cks{outstr}.pdf'
@@ -336,7 +337,7 @@ def make_age_histograms_get_f_inds(df, is_cks=True, outstr='', logage=False,
     plt.xlim([0,2])
     plt.ylabel('count')
     plt.tight_layout()
-    plt.savefig('../results/cks_age_hist_precision/sigmaage_by_age_hist_cks{:s}.pdf'.format(outstr))
+    plt.savefig(savdir+'sigmaage_by_age_hist_cks{:s}.pdf'.format(outstr))
 
     plt.close('all')
     if not logage:
@@ -360,12 +361,13 @@ def make_age_histograms_get_f_inds(df, is_cks=True, outstr='', logage=False,
     #if logage:
     #    plt.xscale('log')
     plt.tight_layout()
-    plt.savefig('../results/cks_age_hist_precision/age_hist_cks{:s}.pdf'.format(outstr))
+    plt.savefig(savdir+'age_hist_cks{:s}.pdf'.format(outstr))
 
     return sel
 
 
-def make_stacked_histograms(df, xparam='radius', logtime=False):
+def make_stacked_histograms(df, xparam='radius', logtime=False,
+                            savdir='../results/cks_age_explorn_stackedhist/'):
 
     if xparam=='radius':
         xlabel='giso_prad'
@@ -493,9 +495,9 @@ def make_stacked_histograms(df, xparam='radius', logtime=False):
     f.tight_layout(h_pad=-0.9)
 
     if logtime:
-        savpath = '../results/cks_age_explorn_stackedhist/stackedhist_log_time_vs_{:s}.pdf'.format(xparam)
+        savpath = savdir+'stackedhist_log_time_vs_{:s}.pdf'.format(xparam)
     else:
-        savpath = '../results/cks_age_explorn_stackedhist/stackedhist_linear_time_vs_{:s}.pdf'.format(
+        savpath = savdir+'stackedhist_linear_time_vs_{:s}.pdf'.format(
                   xparam)
     f.savefig(savpath, bbox_inches='tight')
     f.savefig(savpath.replace('.pdf','.png'), dpi=300, bbox_inches='tight')
@@ -503,7 +505,8 @@ def make_stacked_histograms(df, xparam='radius', logtime=False):
     print('made {:s}'.format(savpath))
 
 
-def make_quartile_scatter(df, xparam='koi_period'):
+def make_quartile_scatter(df, xparam='koi_period',
+                          savdir='../results/cks_age_scatter_percentiles/'):
     '''
     Reproduce Petigura+ 2018's Figure 4, but using ages instead of
     metallicities.
@@ -603,10 +606,10 @@ def make_quartile_scatter(df, xparam='koi_period'):
     plt.grid(False)
     if xparam=='koi_period':
         plt.xlabel("orbital period [days]")
-        savpath = '../results/cks_age_scatter_percentiles/rp_vs_period_scatter_quartiles.pdf'
+        savpath = savdir+'rp_vs_period_scatter_quartiles.pdf'
     elif xparam=='koi_dor':
         plt.xlabel("a/Rstar")
-        savpath = '../results/cks_age_scatter_percentiles/rp_vs_aoverRstar_scatter_quartiles.pdf'
+        savpath = savdir+'rp_vs_aoverRstar_scatter_quartiles.pdf'
     plt.ylabel("planet radius [earth radii]")
 
     f.savefig(savpath, bbox_inches='tight')
@@ -639,7 +642,8 @@ def make_boxplot_koi_count(df):
     f.savefig(savdir+fname_png, dpi=250)
 
 
-def make_octile_scatter(df, xparam='koi_period'):
+def make_octile_scatter(df, xparam='koi_period',
+                        savdir='../results/cks_age_scatter_percentiles/'):
     '''
     Reproduce Petigura+ 2018's Figure 4, but using ages instead of
     metallicities.
@@ -721,10 +725,10 @@ def make_octile_scatter(df, xparam='koi_period'):
     plt.grid(False)
     if xparam=='koi_period':
         plt.xlabel("orbital period [days]")
-        savpath = '../results/cks_age_scatter_percentiles/rp_vs_period_scatter_octiles.pdf'
+        savpath = savdir+'rp_vs_period_scatter_octiles.pdf'
     elif xparam=='koi_dor':
         plt.xlabel("a/Rstar")
-        savpath = '../results/cks_age_scatter_percentiles/rp_vs_aoverRstar_scatter_octiles.pdf'
+        savpath = savdir+'rp_vs_aoverRstar_scatter_octiles.pdf'
     plt.ylabel("planet radius [earth radii]")
 
     f.savefig(savpath, bbox_inches='tight')
@@ -883,7 +887,7 @@ def make_old_young_scatter(df, xparam='koi_period', metlow=None, methigh=None,
 
 
 def plot_scatter(tab, finite_age_inds, xparam, yparam, logx, logy,
-                 is_cks=True):
+                 is_cks=True, savdir='../results/cks_scatter_plots/'):
     '''
     args:
         tab (DataFrame or astropy table)
@@ -983,11 +987,6 @@ def plot_scatter(tab, finite_age_inds, xparam, yparam, logx, logy,
 
     logystr = 'log_' if logy else ''
     logxstr = 'log_' if logx else ''
-
-    if is_cks and 'age' in yparam:
-        savdir = '../results/cks_age_plots/'
-    elif is_cks and 'age' not in yparam:
-        savdir = '../results/cks_scatter_plots/'
 
     fname_pdf = logystr+yparam+'_vs_'+logxstr+xparam+'.pdf'
     fname_png = fname_pdf.replace('.pdf','.png')
