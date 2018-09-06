@@ -9,9 +9,6 @@ this includes:
   does secular chaos lead to more widely spaced systems? (current status is
   maybe, but the statistics aren't convincing).
 
-* tools to flag clusters, moving groups, and other interesting stars from TESS
-  alerts.
-
 
 ```
 src/
