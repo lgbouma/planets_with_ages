@@ -935,36 +935,10 @@ def plot_scatter(tab, finite_age_inds, xparam, yparam, logx, logy,
     else:
         raise NotImplementedError
 
-    # only plot planets with P < 1e4, or Rp<2.5Rj. this requires some
-    # sick nparray formation tricks.
-    xsel = -1
-    if 'pl_orbper' in xparam:
-        xsel = arr(goodvals) < 1e4
-    if 'pl_radj' in xparam:
-        xsel = arr(goodvals) < 2.5
-    if 'pl_rade' in xparam:
-        xsel = arr(goodvals) < 28
-    if 'giso_prad' in xparam and is_cks:
-        xsel = arr(goodvals) < 3e1
-    if 'koi_period' in xparam:
-        xsel = arr(goodvals) < 2e2
-    if 'koi_dor' in xparam:
-        xsel = arr(goodvals) < 178
-
-    if type(xsel) != int:
-        # you selected by some criterion in xparam
-        xvals, yvals = arr(goodvals[xsel]), arr(yvals[xsel])
-        yvals_perr = arr(yvals_perr[xsel])
-        yvals_merr = arr(yvals_merr[xsel])
-        yvals_errs = np.array(
-                [yvals_perr, yvals_merr]).reshape(2, len(yvals[xsel]))
-        yerrs = yvals_errs
-
-    else:
-        xvals, yvals = arr(goodvals), arr(yvals)
-        yvals_errs = np.array(
-                [yvals_perr, yvals_merr]).reshape(2, len(yvals))
-        yerrs = yvals_errs
+    xvals, yvals = arr(goodvals), arr(yvals)
+    yvals_errs = np.array(
+            [yvals_perr, yvals_merr]).reshape(2, len(yvals))
+    yerrs = yvals_errs
 
     if is_cks and not logy and 'age' in yparam:
         yvals /= 1e9

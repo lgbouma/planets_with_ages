@@ -63,7 +63,7 @@ def arr(x):
     return np.array(x)
 
 
-def _get_cks_data():
+def _get_cks_data(merge_vs_gaia=None):
     '''
     Returns:
 
@@ -128,37 +128,38 @@ def _get_cks_data():
     # assign the closest Gaia matching star in separation to the given KIC
     # coordinates.
 
-    gaia_kepler_fun_dir = '/home/luke/local/gaia-kepler_fun_crossmatch/'
-    fun_file = 'kepler_dr2_1arcsec.fits'
-    gk = Table.read(gaia_kepler_fun_dir+fun_file, format='fits')
+    if merge_vs_gaia:
+        gaia_kepler_fun_dir = '/home/luke/local/gaia-kepler_fun_crossmatch/'
+        fun_file = 'kepler_dr2_1arcsec.fits'
+        gk = Table.read(gaia_kepler_fun_dir+fun_file, format='fits')
 
-    gcols = ['astrometric_excess_noise_sig','kepid','kepler_gaia_ang_dist',
-             'teff', 'logg', 'kepmag', 'phot_g_mean_mag', 'teff_val']
-    gkp = gk[gcols].to_pandas()
+        gcols = ['astrometric_excess_noise_sig','kepid','kepler_gaia_ang_dist',
+                 'teff', 'logg', 'kepmag', 'phot_g_mean_mag', 'teff_val']
+        gkp = gk[gcols].to_pandas()
 
-    cgk_idm = pd.merge(df, gkp, how='left', left_on=['id_kic'],
-                       right_on=['kepid'], indicator=True)
+        cgk_idm = pd.merge(df, gkp, how='left', left_on=['id_kic'],
+                           right_on=['kepid'], indicator=True)
 
-    cks_kicids = arr(df['id_kic'])
-    cgk_idm_kicids = arr(cgk_idm['id_kic'])
+        cks_kicids = arr(df['id_kic'])
+        cgk_idm_kicids = arr(cgk_idm['id_kic'])
 
-    u_cks, inv_cks, counts_cks = np.unique(cks_kicids,
-                                           return_inverse=True,
-                                           return_counts=True)
+        u_cks, inv_cks, counts_cks = np.unique(cks_kicids,
+                                               return_inverse=True,
+                                               return_counts=True)
 
-    u_cgk_idm, inv_cgk_idm, counts_cgk_idm = np.unique(cgk_idm_kicids,
-                                                       return_inverse=True,
-                                                       return_counts=True)
+        u_cgk_idm, inv_cgk_idm, counts_cgk_idm = np.unique(cgk_idm_kicids,
+                                                           return_inverse=True,
+                                                           return_counts=True)
 
-    different_ids = u_cks[counts_cgk_idm - counts_cks != 0]
+        different_ids = u_cks[counts_cgk_idm - counts_cks != 0]
 
-    # take the closest star in separation (with the same assigned kicid) as the
-    # host star, for Gaia astrometric excess noise identification purposes.
-    cgk_idm_s = cgk_idm.sort_values(['id_koicand', 'kepler_gaia_ang_dist'])
-    cgk_idm_cut = cgk_idm_s.drop_duplicates(subset=['id_koicand'], keep='first')
+        # take the closest star in separation (with the same assigned kicid) as the
+        # host star, for Gaia astrometric excess noise identification purposes.
+        cgk_idm_s = cgk_idm.sort_values(['id_koicand', 'kepler_gaia_ang_dist'])
+        cgk_idm_cut = cgk_idm_s.drop_duplicates(subset=['id_koicand'], keep='first')
 
-    del df
-    df = cgk_idm_cut
+        del df
+        df = cgk_idm_cut
 
     ##########################################
     ## # I checked that I did the Gaia merge right...
@@ -456,7 +457,7 @@ def _main_cks_IV_filters_plus_gaia_astrom_excess():
     if plot_janky:
         print('plotting janky params...')
 
-    df = _get_cks_data()
+    df = _get_cks_data(merge_vs_gaia=True)
     sel = _apply_cks_IV_filters_plus_gaia_astrom_excess(df)
 
     # raw exploration plots
@@ -575,8 +576,8 @@ def _main_cks_IV_filters_plus_gaia_astrom_excess():
 
 if __name__ == '__main__':
 
-    ## # make all the plots w/ CKS IV filters
-    ##  _main_cks_IV_filters()
+    # make all the plots w/ CKS IV filters
+     _main_cks_IV_filters()
 
-    # make all the plots w/ CKS IV filters + gaia astrometric excess cut
-    _main_cks_IV_filters_plus_gaia_astrom_excess()
+    ## # make all the plots w/ CKS IV filters + gaia astrometric excess cut
+    ## _main_cks_IV_filters_plus_gaia_astrom_excess()
