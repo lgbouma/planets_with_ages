@@ -253,6 +253,7 @@ def plot_varamplitude_vs_teff_koi_v_notkoi(df_koi, df_notkoi):
 
     sel_single = (df_koi['koi_count']==1)
     sel_multi = (df_koi['koi_count']>1)
+    # get and save binned median
     singlekoi_median_rvar, singlekoi_median_rvar_errs, teff_bin_middles = \
             calculate_medians(df_koi[sel_single], Rvarkey="Rvar")
     multikoi_median_rvar, multikoi_median_rvar_errs, _ = \
@@ -260,7 +261,6 @@ def plot_varamplitude_vs_teff_koi_v_notkoi(df_koi, df_notkoi):
     notkoi_median_rvar, notkoi_median_rvar_errs, _ = \
             calculate_medians(df_notkoi, Rvarkey="Rper")
 
-    # save the data to what you're about to plot
     df = pd.DataFrame({
         "singlekoi_median_rvar":singlekoi_median_rvar,
         "singlekoi_median_rvar_errs":singlekoi_median_rvar_errs,
@@ -274,14 +274,37 @@ def plot_varamplitude_vs_teff_koi_v_notkoi(df_koi, df_notkoi):
     df.to_csv(savpath, index=False)
     print("saved {:s}".format(savpath))
 
-    # make plot
+    # get and save running median
+    mf_rvar_koi_single, mf_teff_koi_single = (
+        get_running_median(df_koi[sel_single], 150, Rvarkey='Rvar')
+    )
+    mf_rvar_koi_multi, mf_teff_koi_multi = (
+        get_running_median(df_koi[sel_multi], 50, Rvarkey='Rvar')
+    )
+    mf_rvar_notkoi, mf_teff_notkoi = (
+        get_running_median(df_notkoi, 1000, Rvarkey='Rper')
+    )
+
+    mf_d = {
+        'mf_rvar_koi_single':np.log10(mf_rvar_koi_single),
+        'mf_teff_koi_single':mf_teff_koi_single,
+        'mf_rvar_koi_multi':np.log10(mf_rvar_koi_multi),
+        'mf_teff_koi_multi':mf_teff_koi_multi,
+        'mf_rvar_notkoi':np.log10(mf_rvar_notkoi),
+        'mf_teff_notkoi':mf_teff_notkoi
+    }
+    mf_savpath = "../data/varamplitude_vs_teff_koi_v_notkoi.pickle"
+    with open(mf_savpath, 'wb') as f:
+        pickle.dump(mf_d, f, pickle.HIGHEST_PROTOCOL)
+        print('saved {:s}'.format(mf_savpath))
+
     plt.close("all")
     f, ax = plt.subplots(figsize=(8,6))
 
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b',
               '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 
-    # first do the scatter points
+    # background scatter points
     ax.scatter(df_koi[sel_single]["Teff"], df_koi[sel_single]["Rvar"], s=5,
                zorder=2, rasterized=True, linewidths=0, c=colors[0],
                label="{:d} single KOIs".format(len(df_koi[sel_single])))
@@ -292,29 +315,41 @@ def plot_varamplitude_vs_teff_koi_v_notkoi(df_koi, df_notkoi):
                rasterized=True, label="{:d} nonKOIs".format(len(df_notkoi)),
                linewidths=0, c="gray")
 
-    # then plot the medians
-    ax.plot(teff_bin_middles, singlekoi_median_rvar, color=colors[0], marker="o",
-            linewidth=2, zorder=5, markersize=5)
+    # 250 K bins medians and their errors
+    ax.scatter(teff_bin_middles, singlekoi_median_rvar, color=colors[0],
+               marker="o", linewidths=0, zorder=5, s=25, rasterized=True)
     ax.errorbar(teff_bin_middles, singlekoi_median_rvar,
                 yerr=singlekoi_median_rvar_errs, elinewidth=0.3,
                 ecolor=colors[0], capsize=1, capthick=1, linewidth=1, fmt="s",
-                ms=0, zorder=5)
-    ax.plot(teff_bin_middles, multikoi_median_rvar, color=colors[1],
-            marker="o", linewidth=2, zorder=6, markersize=5)
+                ms=0, zorder=2, alpha=1)
+    ax.scatter(teff_bin_middles, multikoi_median_rvar, color=colors[1],
+               marker="o", linewidths=0, zorder=6, s=25, rasterized=True)
     ax.errorbar(teff_bin_middles, multikoi_median_rvar,
                 yerr=multikoi_median_rvar_errs, elinewidth=0.3,
                 ecolor=colors[1], capsize=1, capthick=1, linewidth=1, fmt="s",
-                ms=0, zorder=6)
-    ax.plot(teff_bin_middles, notkoi_median_rvar, color="gray", marker="o",
-            linewidth=2, zorder=4, markersize=5)
+                ms=0, zorder=6, alpha=1)
+    ax.scatter(teff_bin_middles, notkoi_median_rvar, color="gray", marker="o",
+               linewidths=0, zorder=4, s=25, rasterized=True)
     ax.errorbar(teff_bin_middles, notkoi_median_rvar,
                 yerr=notkoi_median_rvar_errs, elinewidth=0.3, ecolor="gray",
-                capsize=1, capthick=1, linewidth=1, fmt="s", ms=0, zorder=4)
+                capsize=1, capthick=1, linewidth=1, fmt="s", ms=0, zorder=4,
+                alpha=1)
+
+    # running median lines FIXME
+    minteff, maxteff = 3625, 6375
+    sel_singlekoi = (mf_teff_koi_single > minteff) & (mf_teff_koi_single  < maxteff)
+    sel_multikoi = (mf_teff_koi_multi > minteff) & (mf_teff_koi_multi < maxteff)
+    sel_notkoi = (mf_teff_notkoi > minteff) & (mf_teff_notkoi < maxteff)
+    ax.plot(mf_teff_koi_single[sel_singlekoi],
+            mf_rvar_koi_single[sel_singlekoi], color=colors[0], marker=None,
+            linewidth=2, zorder=2, markersize=0)
+    ax.plot(mf_teff_koi_multi[sel_multikoi], mf_rvar_koi_multi[sel_multikoi],
+            color=colors[1], marker=None, linewidth=2, zorder=2, markersize=0)
+    ax.plot(mf_teff_notkoi[sel_notkoi], mf_rvar_notkoi[sel_notkoi],
+            color='gray', marker=None, linewidth=2, zorder=1, markersize=0)
 
     ax.set_yscale("log")
-
     ax.legend(loc="lower left")
-
     ax.set_xlabel("Teff [K]")
     ax.set_ylabel("rotation amplitude [ppm]")
     ax.set_ylim([10**(2.3), 10**(5.2)])
