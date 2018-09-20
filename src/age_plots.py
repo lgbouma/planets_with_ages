@@ -909,13 +909,15 @@ def make_old_young_scatter(df, xparam='koi_period', metlow=None, methigh=None,
 
 
 def plot_scatter(tab, finite_age_inds, xparam, yparam, logx, logy,
-                 is_cks=True, savdir='../results/cks_scatter_plots/'):
+                 is_cks=True, savdir='../results/cks_scatter_plots/',
+                 ylim=None, xlim=None):
     '''
     args:
         tab (DataFrame or astropy table)
         finite_age_inds
         yparam (str): preferably 'giso_slogage' or 'cks_smet'
         xparam (str): thing you want to scatter plot against
+        xlim (tuple): overrides
 
     kwargs:
         only one of is_exoarchive, is_cks, is_sandersdas should be true.
@@ -932,6 +934,14 @@ def plot_scatter(tab, finite_age_inds, xparam, yparam, logx, logy,
             yvals = tab[yparam][finite_age_inds]
             yvals_perr = tab[yparam][finite_age_inds]
             yvals_merr = tab[yparam][finite_age_inds]
+        if xparam=='giso_slogage':
+            xvals = 10**(tab['giso_slogage'][finite_age_inds])
+            xvals_perr = 10**(tab['giso_slogage_err1'][finite_age_inds])
+            xvals_merr = 10**(np.abs(tab['giso_slogage_err2'][finite_age_inds]))
+        elif xparam=='cks_smet':
+            xvals = tab[yparam][finite_age_inds]
+            xvals_perr = tab[yparam][finite_age_inds]
+            xvals_merr = tab[yparam][finite_age_inds]
     else:
         raise NotImplementedError
 
@@ -973,11 +983,16 @@ def plot_scatter(tab, finite_age_inds, xparam, yparam, logx, logy,
     if logx:
         ax.set_xscale('log')
 
-    if not logy and 'age' in yparam:
+    if ylim is None and not logy and 'age' in yparam:
         ax.set_ylim([0,14])
     elif not logy and 'smet' in yparam and 'prad' in xparam:
         ax.set_ylim([-0.2,0.4])
         ax.set_xlim([0.3,20])
+
+    if ylim:
+        ax.set_ylim(ylim)
+    if xlim:
+        ax.set_xlim(xlim)
 
     f.tight_layout()
 

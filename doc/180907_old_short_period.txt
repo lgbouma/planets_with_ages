@@ -1,0 +1,85 @@
+Fri Sep  7 20:24:02 2018
+
+In stellar age vs a/Rstar (or period) space, the absence of short period
+planets in the CKS sample is notcieable.
+
+In stellar metallicity vs a/Rstar space, the absence is blatant. It's almost a
+step function after [Fe/H]<-0.2.
+
+In stellar age vs a/Rstar, if you squint at it, it actually looks like the
+paucity extends further down -- like to ~4Gyr, with an "envelope". But this
+could be seeing patterns in noise. Or _wanting_ to see patterns thru noise.
+
+Regardless, the lack of old, short period planets could very well be a
+metallicity effect. Or it could be an age effect. The two are degenerate.
+
+If it were age...
+
+  Could it be tides? What Qstar would be required? (Probably very low! Because of
+      the small M_pl.)
+
+      * Can you do an OOM calculation to show what Qstar would be needed?
+      (AKA, just calculate the tidal inspiral timescale in equilibrium tide
+      theory from OOM considerations. The 1/e folding time of a/adot).
+
+  Could it be secular chaos? In this case, you would need a reasonable fraction
+  of the inner planets to be kicked out after ~10 Gyr of evolution, in a
+  "typical system" (e.g., 3 planets within 400 days, per Zhu+ 2018).
+
+If it were metallicity...
+  Could it be related to *formation requirements*? Like: you need a certain
+  amount of metals in your disk to enable grain sticking and growth. Below a
+  certain point, at least close in,
+
+  Why the period dependence? Maybe you need giant planets to move planets below
+  a/Rstar~=10? You can form small planets no matter what, but giant planets
+  have the metallicity dependence?
+
+
+----------
+FROM PETIGURA+ 2018:
+
+On what you expect the radial disk surface density to look like in the Chiang &
+Laughlin 2013, or the Lee & Chiang 2017 models:
+
+The inner disk is truncated by B fields from the star.
+
+"""
+In the Lee & Chiang (2017) model, hot super- Earth/sub-Neptune occurrence rates
+are set by stellar rotation on the pre-main-sequence. It is not clear if
+stellar metallicity is correlated with pre-main-sequence rotation rates, and
+Lee & Chiang (2017) did not predict a metallicity dependence for hot
+super-Earths/sub- Neptunes.
+"""
+
+"""
+High eccentricity migration may explain the hot super-Earth/sub-Neptune period
+and metallicity distributions.  Some of the hot super-Earths/sub-Neptunes may
+be the result of scattering events between multiple planets. Such encounters
+preserve the total orbital energy of both planets, but the semi-major axes of
+both planets may be significantly altered. Dawson & Murray- Clay (2013)
+proposed a similar mechanism to explain the fact that high eccentricity giant
+planets with a = 0.1– 1.0 AU, almost exclusively orbit stars with super-solar
+metallicities.
+
+A formation pathway involving scattering may help to explain the existence of
+hot sub-Neptunes, which are at risk of photo-evaporative stripping (see Section
+7.2.1).  Scattering events may occur late enough such that a sub-Neptune is not
+subjected to the majority its star’s XUV output (t & 100 Myr).
+"""
+
+"""
+Additional clues to the formation of hot super- Earths/sub-Neptunes may lie in
+their orbital eccentrici ties and degree of alignment with stellar spin axes
+(obliquities).  If planets initially form in the plane of their disks, but are
+then scattered by other planets, we predict relic eccentricities and
+obliquities. If these planets form in relative isolation, and are simply a
+product of the local disk density profile, their eccentricities and obliquities
+should be low.
+"""
+
+(Well wait though. We know P<10 day planets in multis tend to have large P2/P1.
+Doesn't this support planet scattering [high-e] more than in-situ?
+Isn't the entire point of in situ that you can't form them at a/Rstar <~ 10?)
+
+

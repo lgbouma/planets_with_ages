@@ -113,14 +113,29 @@ def make_old_short_period_plots():
 
     # a few sanity checks
     plot_scatter(df, sel, 'koi_period', 'cks_smet', True, False, is_cks=True,
-                 savdir='../results/cks_age_plots_old_short_period/')
+                 savdir='../results/cks_age_plots_old_short_period/',
+                 ylim=[0.5,-0.5])
     plot_scatter(df, sel, 'koi_dor', 'cks_smet', True, False, is_cks=True,
-                 savdir='../results/cks_age_plots_old_short_period/')
+                 savdir='../results/cks_age_plots_old_short_period/',
+                 ylim=[0.5,-0.5])
+    plot_scatter(df, sel, 'cks_smet', 'giso_slogage', False, False,
+                 is_cks=True,
+                 savdir='../results/cks_age_plots_old_short_period/',
+                 xlim=[0.5,-0.5])
 
+    # do the rough calculation of "what %age of planets are at a/R<10 at
+    # >10 Gyr, and below it?
     calculate_and_print_fractions(df, sel)
 
-    # FIXME: do the rough calculation of "what %age of planets are at a/R<10 at
-    # >10 Gyr, and from 1-8gyr?"
+    # what is the a/Rstar<3, smet < -0.3 object?
+    inds = (df['cks_smet'] < -0.3)
+    inds &= (df['koi_dor'] < 3)
+    print(df[inds])
+
+    # what are the a/Rstar<3, age > 10Gyr objects?
+    inds = (10**(df['giso_slogage']) > 12e9)
+    inds &= (df['koi_dor'] < 4)
+    print(df[inds])
 
 
 if __name__ == '__main__':
