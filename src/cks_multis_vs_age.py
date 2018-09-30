@@ -260,7 +260,9 @@ def get_all_planet_pairs(df, sel):
           'n_planet_in_sys':[],
           'pair_ind':[],
           'pair_inner_period':[],
-          'pair_outer_period':[]
+          'pair_outer_period':[],
+          'pair_inner_abyRstar':[],
+          'pair_outer_abyRstar':[]
         }
 
     pair_ind = 0
@@ -310,6 +312,18 @@ def get_all_planet_pairs(df, sel):
             )
             d['pair_outer_period'].append(
                 float(this_sys.ix[ix+1]['koi_period'])
+            )
+            d['pair_inner_abyRstar'].append(
+                (
+                float(this_sys.ix[ix]['giso_sma'])*u.au/
+                (float(this_sys.ix[ix]['giso_srad'])*u.Rsun)
+                ).cgs.value
+            )
+            d['pair_outer_abyRstar'].append(
+                (
+                float(this_sys.ix[ix+1]['giso_sma'])*u.au/
+                (float(this_sys.ix[ix+1]['giso_srad'])*u.Rsun)
+                ).cgs.value
             )
 
             pair_ind += 1
@@ -620,8 +634,12 @@ def scatter_p2byp1_vs_p1(pairs):
     # the period ratio P2/P1 tends to be larger than average when P1 is less
     # than about 2-3 days
 
+    a1 = arr(pairs['pair_inner_sma'])
+    a2 = arr(pairs['pair_outer_sma'])
     P1 = arr(pairs['pair_inner_period'])
     P2 = arr(pairs['pair_outer_period'])
+    aByRstar1 = arr(pairs['pair_inner_abyRstar'])
+    aByRstar2 = arr(pairs['pair_outer_abyRstar'])
 
     plt.close('all')
     f,ax = plt.subplots(figsize=(8,6))
@@ -783,12 +801,67 @@ def scatter_p2byp1_vs_p1_age_percentiles(pairs):
     print('made {:s}'.format(savpath))
 
 
+def hill_radius_pairs_vs_age(pairs, aByRstar_cut=20):
+
+    plt.close('all')
+    f,ax = plt.subplots(nrows=1, ncols=1, figsize=(8,6))
+
+    a1 = arr(pairs['pair_inner_sma'])
+    a2 = arr(pairs['pair_outer_sma'])
+    P1 = arr(pairs['pair_inner_period'])
+    P2 = arr(pairs['pair_outer_period'])
+    aByRstar1 = arr(pairs['pair_inner_abyRstar'])
+    aByRstar2 = arr(pairs['pair_outer_abyRstar'])
+
+    sep_by_RH = arr(pairs['sep_by_RH'])
+    s_logage = arr(pairs['s_logage']) # really giso_slogage
+
+    sel = (aByRstar1 < aByRstar_cut) & (aByRstar2 < aByRstar_cut)
+
+    ax.scatter(sep_by_RH[sel], 10**(s_logage[sel])/1e9 )
+
+    ax.set_xlabel('separation in mutual hill radii')
+    ax.set_ylabel('age [Gyr]')
+
+    from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+    ax.xaxis.set_major_locator(MultipleLocator(10))
+    ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+    #ax.yaxis.set_major_locator(MultipleLocator(10))
+    #ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+    ax.get_yaxis().set_tick_params(which='both', direction='in')
+    ax.get_xaxis().set_tick_params(which='both', direction='in')
+    ax.grid(True, zorder=-2, which='major', alpha=0.2)
+
+    ax.set_title(
+        '{:d} pairs where both planets have '
+        '$a/R_\star<${:d}'.format(len(pairs[sel]),aByRstar_cut)
+    )
+
+    f.tight_layout(h_pad=0, w_pad=0)
+
+    savname = (
+        '../results/cks_age_plots_old_short_period/'+
+        'hill_radius_pairs_vs_age_aByRstar_cut_{:d}.pdf'.format(aByRstar_cut)
+    )
+    f.savefig(savname, bbox_inches='tight')
+    print('saved %s' % savname)
+    savname = (
+        '../results/cks_age_plots_old_short_period/'+
+        'hill_radius_pairs_vs_age_aByRstar_cut_{:d}.png'.format(aByRstar_cut)
+    )
+    f.savefig(savname, bbox_inches='tight', dpi=350)
+    print('saved %s' % savname)
+
+
+
 
 if __name__ == '__main__':
 
     make_fig1_and_split = False
     make_fig6_weiss17 = False
     make_stackedhist_innermost = False
+    make_scatter_p2byp1_vs_p1 = False
 
     df = _get_cks_data()
     sel = _apply_cks_VI_metallicity_study_filters(df)
@@ -813,7 +886,11 @@ if __name__ == '__main__':
         # from the host star in the oldest systems?
         make_stackedhist_innermost_sma(systems)
 
-    # Scatter P2/P1 vs P1, for different age quartiles.
-    scatter_p2byp1_vs_p1(pairs)
-    scatter_p2byp1_vs_p1_metallicity_percentiles(pairs)
-    scatter_p2byp1_vs_p1_age_percentiles(pairs)
+    if make_scatter_p2byp1_vs_p1:
+        # Scatter P2/P1 vs P1, for different age quartiles.
+        scatter_p2byp1_vs_p1(pairs)
+        scatter_p2byp1_vs_p1_metallicity_percentiles(pairs)
+        scatter_p2byp1_vs_p1_age_percentiles(pairs)
+
+    # Mutual hill radius for a/Rstar<20 pairs, vs age
+    hill_radius_pairs_vs_age(pairs)
