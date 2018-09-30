@@ -1009,4 +1009,73 @@ def plot_scatter(tab, finite_age_inds, xparam, yparam, logx, logy,
     f.savefig(savdir+fname_png, dpi=250)
 
 
+def plot_hr(tab, finite_age_inds, colorkey, is_cks=True,
+            savdir='../results/cks_scatter_color_plots/', ylim=None,
+            xlim=None):
+    ''' plot a HR diagram with colored points.
 
+    args:
+        tab (DataFrame or astropy table)
+        finite_age_inds
+        colorkey (str): preferably 'giso_slogage' or 'cks_smet'
+        xlim (tuple): overrides
+
+    kwargs:
+        only one of is_exoarchive, is_cks, is_sandersdas should be true.
+    '''
+
+    if is_cks:
+        xvals = arr(tab['cks_steff'][finite_age_inds])
+        dist_pc = 1/( arr(tab['gaia2_sparallax']*1e-3)[finite_age_inds] )
+        mu = 5 * np.log10(dist_pc)  - 5
+        kmag_apparent = arr(tab['m17_kmag'])[finite_age_inds]
+        kmag_absolute = kmag_apparent - mu
+        yvals = kmag_absolute
+        colors = 10**(arr( tab['giso_slogage'][finite_age_inds]) ) / 1e9
+    else:
+        raise NotImplementedError
+
+    plt.close('all')
+    f, ax = plt.subplots(figsize=(8,6))
+
+    import seaborn as sns
+
+    bounds= list(np.arange(0.5,15.5,1)) #[0, 5, 10]
+    ncolor = len(bounds)
+
+    cmap1 = mpl.colors.ListedColormap(
+            sns.color_palette("plasma", n_colors=ncolor, desat=1))
+    norm1 = mpl.colors.BoundaryNorm(bounds, cmap1.N)
+
+    # squares
+    out = ax.scatter(xvals, yvals, marker='s', c=colors, s=8,
+                     zorder=1, cmap=cmap1, norm=norm1, rasterized=True)
+
+    cbar = f.colorbar(out, cmap=cmap1, norm=norm1, boundaries=bounds,
+        fraction=0.025, pad=0.02, ticks=np.arange(ncolor)+1,
+        orientation='vertical')
+
+    cbarlabels = list(map(str,arr(arr(bounds)+0.5).astype(int)))
+    cbar.ax.set_yticklabels(cbarlabels)
+    cbar.set_label('gaia+cks isochrone age [Gyr]', rotation=270, labelpad=7)
+
+    ax.set_xlabel('cks teff [K]')
+    ax.set_ylabel('absolute K mag (Mathur17 + GaiaDR2 d=1/plx)')
+
+    ax.set_xscale('log')
+
+    xlim = ax.get_xlim()
+    ax.set_xlim(max(xlim),min(xlim))
+    ylim = ax.get_ylim()
+    ax.set_ylim(max(ylim),min(ylim))
+
+    f.tight_layout()
+
+    if not os.path.exists(savdir):
+        os.mkdir(savdir)
+
+    fname_pdf = 'abskmag_vs_logteff.pdf'
+    fname_png = fname_pdf.replace('.pdf','.png')
+    f.savefig(savdir+fname_pdf)
+    print('saved {:s}'.format(fname_pdf))
+    f.savefig(savdir+fname_png, dpi=250)
