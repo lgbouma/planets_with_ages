@@ -28,6 +28,8 @@ from cks_age_exploration import _get_cks_data, \
 
 from numpy import array as arr
 
+from astropy import units as u, constants as const
+
 def calculate_and_print_fractions(df, sel):
     '''
     do the rough calculation of "what %age of planets are at P<~2 or 3
@@ -110,23 +112,46 @@ def plot_ks2sample_abyRstar_old_v_young(df, agecut):
 
     ax.legend(loc='upper left', fontsize='xx-small')
 
+    # tests for statistical signifiance
     from scipy import stats
-    D, p_value = stats.ks_2samp(df_old['koi_dor'],
-                                df_young['koi_dor'])
+    D, ks_p_value = stats.ks_2samp(arr(df_old['koi_dor']),
+                                   arr(df_young['koi_dor']))
+    _, _, ad_p_value = stats.anderson_ksamp([arr(df_old['koi_dor']),
+                                            arr(df_young['koi_dor'])])
+
+    # check differences in Mp/Mstar btwn old and young population
+    from cks_multis_vs_age import _get_WM14_mass
+    old_masses = []
+    for rp in arr(df_old['giso_prad']):
+        old_masses.append(_get_WM14_mass(float(rp)))
+    old_pmasses = arr(old_masses)*u.Mearth
+    old_smasses = arr(df_old['giso_smass'])*u.Msun
+    df_old['Mp_by_Mstar'] = (old_pmasses/old_smasses).cgs.value
+
+    young_masses = []
+    for rp in arr(df_young['giso_prad']):
+        young_masses.append(_get_WM14_mass(float(rp)))
+    young_masses = arr(young_masses)
+    young_pmasses = arr(young_masses)*u.Mearth
+    young_smasses = arr(df_young['giso_smass'])*u.Msun
+    df_young['Mp_by_Mstar'] = (young_pmasses/young_smasses).cgs.value
 
     oldgiant = (df_old['giso_prad'] > 4)
     younggiant = (df_young['giso_prad'] > 4)
-    #FIXME TODO: actually calculate Mp/Mstar estimate here...
+
     # NOTE: if you don't see Mp/Mstar dependence (e.g., it's actually the LESS
     # MASSIVE ones disappearing)--> might be dynamically being throw ut
     txt = (
-        'p={:.1e} for 2sampleKS old vs young'.format(p_value)+
-        '\n<Rp> old = {:.1f}, <Rp> young = {:.1f} (incl Rp>4Rp)'.format(
-            np.mean(df_old['giso_prad']), np.mean(df_young['giso_prad'])
+        'p={:.1e} for 2sampleKS old vs young'.format(ks_p_value)+
+        '\np={:.1e} for 2sampleAD old vs young'.format(ad_p_value)+
+        '\n<Mp/Mstar> old = {:.1e}, <Mp/Mstar> young = {:.1e} (incl Rp>4Rp)'.
+        format(
+            np.mean(df_old['Mp_by_Mstar']), np.mean(df_young['Mp_by_Mstar'])
         )+
-        '\n<Rp> old = {:.1f}, <Rp> young = {:.1f} (not Rp>4Rp)'.format(
-            np.mean(df_old[~oldgiant]['giso_prad']),
-            np.mean(df_young[~younggiant]['giso_prad'])
+        '\n<Mp/Mstar> old = {:.1e}, <Mp/Mstar> young = {:.1e} (not Rp>4Rp)'.
+        format(
+            np.mean(df_old[~oldgiant]['Mp_by_Mstar']),
+            np.mean(df_young[~younggiant]['Mp_by_Mstar'])
         )
     )
     ax.text(0.95, 0.05, txt,
