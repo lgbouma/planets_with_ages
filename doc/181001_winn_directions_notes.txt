@@ -1,0 +1,78 @@
+- 2-sample AD instead of 2-sample KS make things look slightly statistically
+  stronger. (Still ~3sigma difference, p~=2e-3, but age-cut independent).
+
+* do a detectability of a transit signal test (vs age), similar to Petigura's
+  test in appendix B of Petigura+ 2018.
+
+  W not even worth redoing. Petigura did it. doesn't matter!
+
+W can we look at "age residual" or "metallicity residual" vs a/Rstar? -- fit a
+  line to age vs metallicity. subtract it out.
+
+W can make same plot for the wide field surveys -- e.g., "all WASP or HAT
+  planets". 
+  e.g., Bonomo+ for the homogeneous spectroscopic WASP results
+  Stassun et al Gaia redetermination of planet parameters.
+
+  if there is no homogeneous source, ignore the idea.
+
+W in age vs a/Rstar. do one point per star -- innermost point.
+
+* planet occ vs age correlations.
+  we enjoy relations of the form:
+
+    f_occ ~ 10^([M/H] * beta).
+
+  What about we derive some relations of the form:
+
+    f_occ ~ 10^([age] * zeta).
+
+  In particular, for HJs, I'm not sure there's much EMPIRICAL EVIDENCE that the
+  HJ occ-metallicity correlation should be interpreted when ignoring age.
+  
+  Surely age matters too. E.g., Figure 1 of Levrard et al 2009, puts most HJs
+  as <1Gyr stable, almost all as <5Gyr (except OGLE-TR-111b).
+  HOWEVER this figure is perhaps making a terrible assumption that Qstar: =
+  1e6. Penev+ (2018) quotes at least some HJs with Qstar(Ptide) = 1e7, perhaps
+  up to Qstar=1e8.
+
+  If this Qstar=1e8 is typical, then the tidal infall in hubble time isn't so
+  relevant.
+
+  HOWEVER the above type of relation would make a point. E.g., "it doesn't make
+  sense for Petigura's beta=3.4 result to be much stronger than FV05's beta~=2
+  result. Perhaps differences come from age."
+    
+* tidal theory component: over 10 Gyr, stellar evolution matters.
+  so does the stellar spin rate.
+  if we're gonna do numerical models, we need to the right ones.
+
+  adot/a  = (planet tidal damping part) + (stellar tidal damping part)
+          = (stellar tidal damping part)     [assuming synchronous]
+          = [assume e=0]
+          = - 9 * (1/Qstar) (Mp/Mstar) (Rstar/a)^5 ( n - Ωstar )
+
+  for n = 2π/P_orb.
+
+  so you at least need Mstar, Rstar, and Ωstar.
+
+  Ωstar has a contribution from the stellar wind too. You can't ignore it and
+  produce believeable population-level results, I don't think.
+
+W ignore omega_star
+  ignore rstar evolution
+  just do the single ODE
+
+W age vs Rp: what is that giant planet around the oldest star??
+  is it a HJ?
+
+* so we should be using Kalo's code.
+
+  option 1) i contact him and we get an install working on my linux box.
+  (install instructions are non-existent)
+
+  option 2) i contact him and we collaborate -- ask him to run some specific
+            models.
+
+
+

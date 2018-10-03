@@ -1,0 +1,37 @@
+from discussion w/ Burke:
+* in occurrence rate space, disentangling dependence of occurrence on stellar
+  mass, metallcity, and age is HARD.
+  All of these parameters probably matter, and in different, perhaps often
+  degenerate ways. (Especially when dealing w/ magnitude-limited samples).
+
+* from XO-2b (or XO-4b? the one Burke led).
+  [Fe/H] difference of ~0.4 can lead to stellar radius differences of ~30%.
+
+  So Burke didn't like that Petigura just took an AVERAGE sensitivty to the
+  entire sample. Because maybe the metal rich ones are BIGGER (at fixed Teff
+  and age).
+
+  Why not calculate the planet detection efficiency in e.g., different
+  metallicity bins, and interpolate to make a map?
+
+  Or why not calculate it for EVERY STAR that was looked at?
+
+* But Petigura's Fig B.1 rebuts his assertion.
+  (My MESA model grids do as well).
+  --> Petigura didn't find a large difference of detectability with
+  metallicity, but he also didn't treat the issue particularly carefully.
+
+* A good approach to this problem, other than from a data-driven point of view
+  (the above), might be to start with a THEORY and then predict what its effect
+  on the young (~few Gyr) population would be after 10-14 Gyr of evolution.
+
+  Such a paper could then have a data section.
+
+* Occ vs [Fe/H] is tricky because you need metallicity not only for the planet
+  sample, but also for the sample of searched stars.
+
+  Petigura got around this by using LAMOST [Fe/H].
+
+  If you were to go the data-driven path, you would need to do the same.
+
+
