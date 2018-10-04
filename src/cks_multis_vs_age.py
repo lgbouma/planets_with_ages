@@ -251,18 +251,18 @@ def get_all_planet_pairs(df, sel):
     # planets in the system.
 
     d = {'pair_inner_radius':[],
-          'pair_outer_radius':[],
-          's_mass':[],
-          's_met':[],
-          's_logage':[],
-          'pair_inner_sma': [],
-          'pair_outer_sma': [],
-          'n_planet_in_sys':[],
-          'pair_ind':[],
-          'pair_inner_period':[],
-          'pair_outer_period':[],
-          'pair_inner_abyRstar':[],
-          'pair_outer_abyRstar':[]
+         'pair_outer_radius':[],
+         's_mass':[],
+         's_met':[],
+         's_logage':[],
+         'pair_inner_sma': [],
+         'pair_outer_sma': [],
+         'n_planet_in_sys':[],
+         'pair_ind':[],
+         'pair_inner_period':[],
+         'pair_outer_period':[],
+         'pair_inner_abyRstar':[],
+         'pair_outer_abyRstar':[]
         }
 
     pair_ind = 0
