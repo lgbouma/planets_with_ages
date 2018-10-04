@@ -2,7 +2,10 @@
 from `cks_age_exploration`, we found that there are not many old and close-in
 planets. Where are all the short-period planets around the oldest stars?
 
-let's look at this closer.
+----------
+usage: select your filters (approach #1,#2,#3 as described in comments). then:
+
+    `python cks_old_short_period.py`
 '''
 import matplotlib as mpl
 mpl.use('Agg')
@@ -87,7 +90,7 @@ def calculate_and_print_fractions(df, sel):
             )
 
 
-def plot_ks2sample_abyRstar_old_v_young(df, agecut):
+def plot_ks2sample_abyRstar_old_v_young(df, agecut, savdir=None):
 
     f, ax = plt.subplots(nrows=1,ncols=1,figsize=(8,6))
 
@@ -164,61 +167,295 @@ def plot_ks2sample_abyRstar_old_v_young(df, agecut):
 
     # save it
     f.tight_layout()
-    savpath = ("../results/cks_age_plots_old_short_period/"
+    savpath = (savdir+
                "ks2sample_abyRstar_old_v_young_cut{:.1e}yr.png".format(agecut))
     f.savefig(savpath, bbox_inches="tight", dpi=350)
     print("made {:s}".format(savpath))
 
 
+def age_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS, savdir=None):
+
+    plt.close('all')
+
+    f, ax = plt.subplots(nrows=1,ncols=1,figsize=(8,6))
+    ax.scatter(df_turnedoff['koi_dor'], 10**(df_turnedoff['giso_slogage'])/1e9,
+               marker='s', s=8, zorder=1, rasterized=True, label='turned off')
+    ax.scatter(df_onMS['koi_dor'], 10**(df_onMS['giso_slogage'])/1e9,
+               marker='s', s=8, zorder=1, rasterized=True, label='on MS')
+
+    ax.set_ylabel('age [Gyr] (cks VII gaia+CKS isochrone)')
+    xscale='log'
+    ax.set_xscale(xscale)
+    ax.set_xlabel('koi a/Rstar')
+
+    ax.legend(loc='best',fontsize='small')
+
+    f.tight_layout()
+
+    savstr = '_classified_scatter'
+    fname_pdf = 'age_vs_log_koi_dor{:s}.pdf'.format(savstr)
+    fname_png = fname_pdf.replace('.pdf','.png')
+    f.savefig(savdir+fname_pdf)
+    print('saved {:s}'.format(fname_pdf))
+    f.savefig(savdir+fname_png, dpi=250)
+
+
+
+def logg_vs_teff_classified_scatter(df_turnedoff, df_onMS, savdir=None):
+
+    savstr = '_classified_scatter'
+    plt.close('all')
+
+    f, ax = plt.subplots(nrows=1,ncols=1,figsize=(8,6))
+    ax.scatter(df_turnedoff['cks_steff'], df_turnedoff['giso_slogg'],
+               marker='s', s=8, zorder=1, rasterized=True, label='turned off')
+    ax.scatter(df_onMS['cks_steff'], df_onMS['giso_slogg'], marker='s', s=8,
+               zorder=1, rasterized=True, label='on MS')
+
+    df = pd.read_csv('../data/logg_vs_teff_line.csv',
+                     names=['teff','logg'], header=None)
+    logg = np.array(df['logg'])
+    teff = np.array(df['teff'])
+
+    from scipy.interpolate import interp1d
+    fn = interp1d(teff[::-1], logg[::-1], kind='quadratic', bounds_error=True)
+
+    teff_arr = np.linspace(np.min(teff),np.max(teff),1000)
+    logg_arr = fn(teff_arr)
+
+    ax.plot(teff_arr, logg_arr, zorder=2)
+
+    ax.set_ylabel('logg (cks VII gaia+CKS isochrone)')
+    xscale='linear'
+    ax.set_xscale(xscale)
+    ax.set_xlabel('cks teff [K]')
+
+    ax.legend(loc='best',fontsize='small')
+
+    xlim = ax.get_xlim()
+    ax.set_xlim(max(xlim),min(xlim))
+    ylim = ax.get_ylim()
+    ax.set_ylim(max(ylim),min(ylim))
+
+    f.tight_layout()
+
+    fname_pdf = 'logg_vs_{:s}teff{:s}.pdf'.format(xscale, savstr)
+    fname_png = fname_pdf.replace('.pdf','.png')
+    f.savefig(savdir+fname_pdf)
+    print('saved {:s}'.format(fname_pdf))
+    f.savefig(savdir+fname_png, dpi=250)
+
+
+def plot_ks2sample_abyRstar_turnoff_v_mainsequence(df, savdir=None):
+
+    # get the stars past the "turnoff", and those not.
+    _df = pd.read_csv('../data/logg_vs_teff_line.csv',
+                     names=['teff','logg'], header=None)
+    _logg = np.array(_df['logg'])
+    _teff = np.array(_df['teff'])
+
+    from scipy.interpolate import interp1d
+    fn = interp1d(_teff[::-1], _logg[::-1], kind='quadratic',
+                  bounds_error=False, fill_value='extrapolate')
+    fn2 = interp1d(_logg[::-1], _teff[::-1], kind='quadratic',
+                   bounds_error=False, fill_value='extrapolate')
+
+    teff_arr = np.linspace(np.min(_teff),np.max(_teff),1000)
+    logg_arr = fn(teff_arr)
+
+    slogg = arr(df['giso_slogg'])
+    steff = arr(df['cks_steff'])
+
+    sel = (steff > 5000)
+    sel &= ( slogg < fn(steff) )
+    sel &= ( steff < fn2(slogg) )
+
+    df_turnedoff = df[sel]
+    df_onMS = df[~sel]
+
+    # make classified scatter plot
+    logg_vs_teff_classified_scatter(df_turnedoff, df_onMS, savdir=savdir)
+    age_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS, savdir=savdir)
+
+    # make the cdf plot
+    plt.close('all')
+    f, ax = plt.subplots(nrows=1,ncols=1,figsize=(8,6))
+
+    counts, bin_edges = np.histogram(arr(df_turnedoff['koi_dor']),
+                                     bins=len(df_turnedoff),
+                                     normed=True)
+    cdf = np.cumsum(counts)
+    ax.plot(bin_edges[1:], cdf/cdf[-1],
+            label="{:d} ``turnedoff''".format(len(df_turnedoff)),
+            lw=0.5)
+
+    counts, bin_edges = np.histogram(arr(df_onMS['koi_dor']),
+                                     bins=len(df_onMS),
+                                     normed=True)
+    cdf = np.cumsum(counts)
+    ax.plot(bin_edges[1:], cdf/cdf[-1],
+            label="{:d} ``on MS''".format(len(df_onMS)),
+            lw=0.5)
+
+    ax.legend(loc='upper left', fontsize='xx-small')
+
+    # tests for statistical signifiance
+    from scipy import stats
+    D, ks_p_value = stats.ks_2samp(arr(df_turnedoff['koi_dor']),
+                                   arr(df_onMS['koi_dor']))
+    _, _, ad_p_value = stats.anderson_ksamp([arr(df_turnedoff['koi_dor']),
+                                            arr(df_onMS['koi_dor'])])
+
+    # check differences in Mp/Mstar btwn old and young population
+    from cks_multis_vs_age import _get_WM14_mass
+    turnedoff_masses = []
+    for rp in arr(df_turnedoff['giso_prad']):
+        turnedoff_masses.append(_get_WM14_mass(float(rp)))
+    turnedoff_pmasses = arr(turnedoff_masses)*u.Mearth
+    turnedoff_smasses = arr(df_turnedoff['giso_smass'])*u.Msun
+    df_turnedoff['Mp_by_Mstar'] = (turnedoff_pmasses/turnedoff_smasses).cgs.value
+
+    mainseq_masses = []
+    for rp in arr(df_onMS['giso_prad']):
+        mainseq_masses.append(_get_WM14_mass(float(rp)))
+    mainseq_masses = arr(mainseq_masses)
+    mainseq_pmasses = arr(mainseq_masses)*u.Mearth
+    mainseq_smasses = arr(df_onMS['giso_smass'])*u.Msun
+    df_onMS['Mp_by_Mstar'] = (mainseq_pmasses/mainseq_smasses).cgs.value
+
+    turnedoffgiant = (df_turnedoff['giso_prad'] > 4)
+    mainseqgiant = (df_onMS['giso_prad'] > 4)
+
+    # NOTE: if you don't see Mp/Mstar dependence (e.g., it's actually the LESS
+    # MASSIVE ones disappearing)--> might be dynamically being throw ut
+    txt = (
+        'p={:.1e} for 2sampleKS turnoff vs MS'.format(ks_p_value)+
+        '\np={:.1e} for 2sampleAD turnoff vs MS'.format(ad_p_value)+
+        '\n<Mp/Mstar> turnoff = {:.1e}, <Mp/Mstar> MS = {:.1e} (incl Rp>4Rp)'.
+        format(
+            np.mean(df_turnedoff['Mp_by_Mstar']), np.mean(df_onMS['Mp_by_Mstar'])
+        )+
+        '\n<Mp/Mstar> turnoff = {:.1e}, <Mp/Mstar> MS = {:.1e} (not Rp>4Rp)'.
+        format(
+            np.mean(df_turnedoff[~turnedoffgiant]['Mp_by_Mstar']),
+            np.mean(df_onMS[~mainseqgiant]['Mp_by_Mstar'])
+        )+
+        '\n<Rstar> turnoff {:.2e}, <Rstar> MS = {:.2e}'.
+        format(
+            np.mean(df_turnedoff['giso_srad']),
+            np.mean(df_onMS['giso_srad'])
+        )
+    )
+
+    ax.text(0.95, 0.05, txt,
+            transform=ax.transAxes, ha='right', va='bottom',
+            fontsize='xx-small')
+
+    ax.set_xlabel('koi a/Rstar')
+    ax.set_ylabel('cdf')
+    ax.set_xscale('log')
+
+    f.tight_layout()
+    savpath = savdir + "ks2sample_abyRstar_turnoff_v_mainsequence.png"
+    f.savefig(savpath, bbox_inches="tight", dpi=350)
+    print("made {:s}".format(savpath))
+    savpath = savdir + "ks2sample_abyRstar_turnoff_v_mainsequence.pdf"
+    f.savefig(savpath, bbox_inches="tight")
+    print("made {:s}".format(savpath))
+
+    return df_turnedoff, df_onMS
+
+
+def _apply_short_period_filters(df):
+    # impose a/Rstar < 100
+    # only take the innermost detected transiting planet of any given system
+
+    sel = np.array(df['koi_dor'] < 100)
+
+    # construct column to select innermost objects of systems
+    is_innermost = []
+    for ix,row in df.iterrows():
+        sname = row['id_starname']
+        this_sys = df[sel][ df[sel]['id_starname'] == sname ]
+        if float(row['koi_dor']) == np.min( this_sys['koi_dor'] ):
+            is_innermost.append(True)
+        else:
+            is_innermost.append(False)
+    is_innermost = np.array(is_innermost)
+
+    return sel & is_innermost
 
 
 def make_old_short_period_plots():
 
+    # approach #1: just use Petigura+ 2018's filters
+    # approach #2: just use Petigura+ 2018's filters, + filter on gaia
+    # astrometric excess
+    # approach #3: just use Petigura+ 2018's filters, + filter on gaia
+    # astrometric excess, + a/Rstar<100 only, + only the innermost planets of
+    # systems.
+    do_approach1 = False
+    do_approach2 = False
+    do_approach3 = True
+    approaches = np.array([do_approach1,do_approach2,do_approach3])
+    assert len(approaches[approaches])==1
+
     make_initial_plots = False
     make_sanity_check_scatters = False
     make_hr_diagram = False
-    make_ks2sample_abyRstar = True
+    make_ks2sample_abyRstar = False
+    make_ks2sample_turnoff = True
+    make_turnoff_v_mainsequence_scatters = True
 
-    # df = _get_cks_data()
-    # sel = _apply_cks_IV_metallicity_study_filters(df) #FIXME
+    if do_approach1:
+        df = _get_cks_data()
+        sel = _apply_cks_IV_metallicity_study_filters(df)
+        savdir = '../results/cks_age_plots_old_short_period_p18filters/'
+        savdir_append='_old_short_period_p18filters'
 
-    df = _get_cks_data(merge_vs_gaia=True)
-    sel = _apply_cks_IV_filters_plus_gaia_astrom_excess(df)
+    if do_approach2:
+        df = _get_cks_data(merge_vs_gaia=True)
+        sel = _apply_cks_IV_filters_plus_gaia_astrom_excess(df)
+        savdir = '../results/cks_age_plots_old_short_period/'
+        savdir_append='_old_short_period'
+
+    if do_approach3:
+        df = _get_cks_data(merge_vs_gaia=True)
+        sel = _apply_cks_IV_filters_plus_gaia_astrom_excess(df)
+        sel &= _apply_short_period_filters(df)
+        savdir = '../results/cks_age_plots_old_short_period_onlyinnermost/'
+        savdir_append='_old_short_period_onlyinnermost'
 
     # remake the plots that got us interested in this
     if make_initial_plots:
         for xparam in ['koi_period', 'koi_dor']:
             logx, logy = True, False
             plot_wellmeasuredparam(df, sel, xparam, logx, logy,
-                                   is_cks=True, savdir_append='_old_short_period')
+                                   is_cks=True, savdir_append=savdir_append)
             plot_wellmeasuredparam(df, sel, xparam, logx, logy,
-                                   is_cks=True, savdir_append='_old_short_period')
+                                   is_cks=True, savdir_append=savdir_append)
 
         make_stacked_histograms(df[sel], logtime=False, xparam='aoverRstar',
-                                savdir='../results/cks_age_plots_old_short_period/')
+                                savdir=savdir)
         make_stacked_histograms(df[sel], logtime=False, xparam='period',
-                                savdir='../results/cks_age_plots_old_short_period/')
+                                savdir=savdir)
         make_stacked_histograms(df[sel], logtime=True, xparam='aoverRstar',
-                                savdir='../results/cks_age_plots_old_short_period/')
+                                savdir=savdir)
         make_stacked_histograms(df[sel], logtime=True, xparam='period',
-                                savdir='../results/cks_age_plots_old_short_period/')
+                                savdir=savdir)
         make_quartile_scatter(df[sel], xparam='koi_period',
-                              savdir='../results/cks_age_plots_old_short_period/')
+                              savdir=savdir)
         make_quartile_scatter(df[sel], xparam='koi_dor',
-                              savdir='../results/cks_age_plots_old_short_period/')
+                              savdir=savdir)
 
     if make_sanity_check_scatters:
         # a few sanity checks
         plot_scatter(df, sel, 'koi_period', 'cks_smet', True, False, is_cks=True,
-                     savdir='../results/cks_age_plots_old_short_period/',
-                     ylim=[0.5,-0.5])
+                     savdir=savdir, ylim=[0.5,-0.5])
         plot_scatter(df, sel, 'koi_dor', 'cks_smet', True, False, is_cks=True,
-                     savdir='../results/cks_age_plots_old_short_period/',
-                     ylim=[0.5,-0.5])
+                     savdir=savdir, ylim=[0.5,-0.5])
         plot_scatter(df, sel, 'cks_smet', 'giso_slogage', False, False,
-                     is_cks=True,
-                     savdir='../results/cks_age_plots_old_short_period/',
-                     xlim=[0.5,-0.5])
+                     is_cks=True, savdir=savdir, xlim=[0.5,-0.5])
 
     # do the rough calculation of "what %age of planets are at a/R<10 at
     # >10 Gyr, and below it?
