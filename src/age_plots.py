@@ -1011,7 +1011,7 @@ def plot_scatter(tab, finite_age_inds, xparam, yparam, logx, logy,
 
 def plot_hr(tab, finite_age_inds, colorkey, is_cks=True,
             savdir='../results/cks_scatter_color_plots/', ylim=None,
-            xlim=None):
+            xlim=None, yaxis='abskmag', savstr='', xscale='log'):
     ''' plot a HR diagram with colored points.
 
     args:
@@ -1026,11 +1026,16 @@ def plot_hr(tab, finite_age_inds, colorkey, is_cks=True,
 
     if is_cks:
         xvals = arr(tab['cks_steff'][finite_age_inds])
-        dist_pc = 1/( arr(tab['gaia2_sparallax']*1e-3)[finite_age_inds] )
-        mu = 5 * np.log10(dist_pc)  - 5
-        kmag_apparent = arr(tab['m17_kmag'])[finite_age_inds]
-        kmag_absolute = kmag_apparent - mu
-        yvals = kmag_absolute
+
+        if yaxis=='abskmag':
+            dist_pc = 1/( arr(tab['gaia2_sparallax']*1e-3)[finite_age_inds] )
+            mu = 5 * np.log10(dist_pc)  - 5
+            kmag_apparent = arr(tab['m17_kmag'])[finite_age_inds]
+            kmag_absolute = kmag_apparent - mu
+            yvals = kmag_absolute
+        elif yaxis=='logg':
+            yvals = arr(tab['giso_slogg'])[finite_age_inds]
+
         colors = 10**(arr( tab['giso_slogage'][finite_age_inds]) ) / 1e9
     else:
         raise NotImplementedError
@@ -1051,6 +1056,7 @@ def plot_hr(tab, finite_age_inds, colorkey, is_cks=True,
     out = ax.scatter(xvals, yvals, marker='s', c=colors, s=8,
                      zorder=1, cmap=cmap1, norm=norm1, rasterized=True)
 
+    # colorbar
     cbar = f.colorbar(out, cmap=cmap1, norm=norm1, boundaries=bounds,
         fraction=0.025, pad=0.02, ticks=np.arange(ncolor)+1,
         orientation='vertical')
@@ -1059,10 +1065,32 @@ def plot_hr(tab, finite_age_inds, colorkey, is_cks=True,
     cbar.ax.set_yticklabels(cbarlabels)
     cbar.set_label('gaia+cks isochrone age [Gyr]', rotation=270, labelpad=7)
 
-    ax.set_xlabel('cks teff [K]')
-    ax.set_ylabel('absolute K mag (Mathur17 + GaiaDR2 d=1/plx)')
+    # overplot the "turnoffcut" lines if desired
+    if savstr=='turnoffcut':
 
-    ax.set_xscale('log')
+       # i loaded the logg vs linear teff plot into webplotdigitzer, dropped
+        # down a bunch of points.
+        assert yaxis=='logg'
+        df = pd.read_csv('../data/logg_vs_teff_line.csv',
+                         names=['teff','logg'], header=None)
+        logg = np.array(df['logg'])
+        teff = np.array(df['teff'])
+
+        from scipy.interpolate import interp1d
+        fn = interp1d(teff[::-1], logg[::-1], kind='quadratic', bounds_error=True)
+
+        teff_arr = np.linspace(np.min(teff),np.max(teff),1000)
+        logg_arr = fn(teff_arr)
+
+        ax.plot(teff_arr, logg_arr, zorder=2)
+
+    # labels and limits
+    ax.set_xlabel('cks teff [K]')
+    if yaxis=='abskmag':
+        ax.set_ylabel('absolute K mag (Mathur17 + GaiaDR2 d=1/plx)')
+    elif yaxis=='logg':
+        ax.set_ylabel('logg (cks VII gaia+CKS isochrone)')
+    ax.set_xscale(xscale)
 
     xlim = ax.get_xlim()
     ax.set_xlim(max(xlim),min(xlim))
@@ -1074,8 +1102,128 @@ def plot_hr(tab, finite_age_inds, colorkey, is_cks=True,
     if not os.path.exists(savdir):
         os.mkdir(savdir)
 
-    fname_pdf = 'abskmag_vs_logteff.pdf'
+    fname_pdf = '{:s}_vs_{:s}teff{:s}.pdf'.format(yaxis, xscale, savstr)
     fname_png = fname_pdf.replace('.pdf','.png')
     f.savefig(savdir+fname_pdf)
     print('saved {:s}'.format(fname_pdf))
     f.savefig(savdir+fname_png, dpi=250)
+
+
+def turnoff_v_mainsequence_scatters(df_turnedoff, df_onMS, savdir=None,
+                                    xparam='koi_period'):
+    '''
+    In the style of Petigura+ 2018's Figure 4, but splitting on whether the
+    host star is on/off the MS.
+
+    kwargs:
+        xparam (str): 'koi_period' or 'koi_dor' (a/Rstar)
+
+    '''
+    if not os.path.exists(savdir):
+        os.mkdir(savdir)
+
+    plt.close('all')
+
+    f,axs = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True,
+                         figsize=(8,4))
+
+    axs = axs.flatten()
+
+    # first: the on-main sequence stars
+    axs[0].scatter(arr(df_turnedoff[xparam]), arr(df_turnedoff['giso_prad']),
+                   zorder=1, marker='o', s=3, c='lightgray')
+    axs[0].scatter(arr(df_onMS[xparam]), arr(df_onMS['giso_prad']), marker='o',
+                   s=3, c='#1f77b4', zorder=2)
+
+    textstr = 'Ntot={:d},Nmainseq={:d} (blue)\nfrac={:.2f}'.format(
+        len(df_onMS)+len(df_turnedoff),len(df_onMS),
+        len(df_onMS)/(len(df_onMS)+len(df_turnedoff))
+    )
+    axs[0].text(0.99, 0.99, textstr, horizontalalignment='right',
+                verticalalignment='top', transform=axs[0].transAxes,
+                fontsize='xx-small')
+
+    meanmetbin = np.mean(arr(df_onMS['cks_smet']))
+    stdmetbin = np.std(arr(df_onMS['cks_smet']))
+    meanagebin = np.mean(10**(arr(df_onMS['giso_slogage']))/1e9)
+    stdagebin = np.std(10**(arr(df_onMS['giso_slogage']))/1e9)
+    meanrstarbin = np.mean(arr(df_onMS['giso_srad']))
+    stdrstarbin = np.std(arr(df_onMS['giso_srad']))
+    meanstr = (
+        'mean([Fe/H])={:.2f}\nstd([Fe/H])={:.2f}'.
+        format(meanmetbin, stdmetbin)+
+        '\nmean(age[Gyr])={:.2f}\nstd(age[Gyr])={:.2f}'.
+        format(meanagebin, stdagebin)+
+        '\nmean(Rstar)={:.2f}\nstd(Rstar)={:.2f}'.
+        format(meanrstarbin, stdrstarbin)
+    )
+    axs[0].text(0.99, 0.01, meanstr, horizontalalignment='right',
+                verticalalignment='bottom', transform=axs[0].transAxes,
+                fontsize='xx-small')
+
+    # then: the turned off stars
+    axs[1].scatter(arr(df_onMS[xparam]), arr(df_onMS['giso_prad']),
+                   zorder=1, marker='o', s=3, c='lightgray')
+    axs[1].scatter(arr(df_turnedoff[xparam]), arr(df_turnedoff['giso_prad']),
+                   marker='o', s=3, c='#1f77b4', zorder=2)
+
+    textstr = 'Ntot={:d},Nturnedoff={:d} (blue)\nfrac={:.2f}'.format(
+        len(df_onMS)+len(df_turnedoff),len(df_turnedoff),
+        len(df_turnedoff)/(len(df_onMS)+len(df_turnedoff))
+    )
+    axs[1].text(0.99, 0.99, textstr, horizontalalignment='right',
+                verticalalignment='top', transform=axs[1].transAxes,
+                fontsize='xx-small')
+
+    meanmetbin = np.mean(arr(df_turnedoff['cks_smet']))
+    stdmetbin = np.std(arr(df_turnedoff['cks_smet']))
+    meanagebin = np.mean(10**(arr(df_turnedoff['giso_slogage']))/1e9)
+    stdagebin = np.std(10**(arr(df_turnedoff['giso_slogage']))/1e9)
+    meanrstarbin = np.mean(arr(df_turnedoff['giso_srad']))
+    stdrstarbin = np.std(arr(df_turnedoff['giso_srad']))
+    meanstr = (
+        'mean([Fe/H])={:.2f}\nstd([Fe/H])={:.2f}'.
+        format(meanmetbin, stdmetbin)+
+        '\nmean(age[Gyr])={:.2f}\nstd(age[Gyr])={:.2f}'.
+        format(meanagebin, stdagebin)+
+        '\nmean(Rstar)={:.2f}\nstd(Rstar)={:.2f}'.
+        format(meanrstarbin, stdrstarbin)
+    )
+    axs[1].text(0.99, 0.01, meanstr, horizontalalignment='right',
+                verticalalignment='bottom', transform=axs[1].transAxes,
+                fontsize='xx-small')
+
+    for ax in axs:
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        if xparam=='koi_period':
+            ax.set_xlim([0.3,210])
+        elif xparam=='koi_dor':
+            ax.set_xlim([1,200])
+        else:
+            raise NotImplementedError
+        ax.set_ylim([0.5,32])
+
+        ax.get_yaxis().set_tick_params(which='both', direction='in')
+        ax.get_xaxis().set_tick_params(which='both', direction='in')
+
+    f.tight_layout(h_pad=0, w_pad=0)
+
+    f.add_subplot(111, frameon=False)
+    plt.tick_params(labelcolor='none', top=False, bottom=False, left=False,
+                    right=False)
+    plt.grid(False)
+    if xparam=='koi_period':
+        plt.xlabel("orbital period [days]")
+        savpath = savdir+'rp_vs_period_scatter_turnoff_v_mainsequence.pdf'
+    elif xparam=='koi_dor':
+        plt.xlabel("a/Rstar")
+        savpath = savdir+'rp_vs_aoverRstar_scatter_turnoff_v_mainsequence.pdf'
+    plt.ylabel("planet radius [earth radii]")
+
+    f.savefig(savpath, bbox_inches='tight')
+    f.savefig(savpath.replace('.pdf','.png'), dpi=300, bbox_inches='tight')
+
+    print('made {:s}'.format(savpath))
+
+
