@@ -20,7 +20,8 @@ rc('text', usetex=True)
 from age_plots import plot_wellmeasuredparam, plot_jankyparam, \
     make_age_histograms_get_f_inds, make_stacked_histograms, \
     make_quartile_scatter, make_boxplot_koi_count, make_octile_scatter, \
-    make_old_young_scatter, plot_scatter, plot_hr
+    make_old_young_scatter, plot_scatter, plot_hr, \
+    turnoff_v_mainsequence_scatters
 
 from download_furlan_2017_results import \
     download_furlan_radius_correction_table
@@ -155,6 +156,11 @@ def plot_ks2sample_abyRstar_old_v_young(df, agecut, savdir=None):
         format(
             np.mean(df_old[~oldgiant]['Mp_by_Mstar']),
             np.mean(df_young[~younggiant]['Mp_by_Mstar'])
+        )+
+        '\n<Rstar> old = {:.3e}, <Rstar> young = {:.3e}'.
+        format(
+            np.mean(df_old['giso_srad']),
+            np.mean(df_young['giso_srad'])
         )
     )
     ax.text(0.95, 0.05, txt,
@@ -475,14 +481,36 @@ def make_old_short_period_plots():
     # age?
     if make_hr_diagram:
         plot_hr(df, sel, 'giso_slogage', is_cks=True,
-                savdir='../results/cks_age_plots_old_short_period/')
+                savdir=savdir, yaxis='abskmag', xscale='log')
+        plot_hr(df, sel, 'giso_slogage', is_cks=True,
+                savdir=savdir, yaxis='abskmag', xscale='linear')
+        plot_hr(df, sel, 'giso_slogage', is_cks=True,
+                savdir=savdir, yaxis='logg', xscale='log')
+        plot_hr(df, sel, 'giso_slogage', is_cks=True,
+                savdir=savdir, yaxis='logg', xscale='linear')
+        plot_hr(df, sel, 'giso_slogage', is_cks=True,
+                savdir=savdir, yaxis='logg', savstr='turnoffcut',
+                xscale='linear')
 
     # CDFs and two-sample KS to compare the a/Rstar distributions of old and
     # young planets. What is the p-value?
     if make_ks2sample_abyRstar:
         agecuts = [7e9,8e9,9e9,10e9,11e9,12e9]
         for agecut in agecuts:
-            plot_ks2sample_abyRstar_old_v_young(df[sel], agecut)
+            plot_ks2sample_abyRstar_old_v_young(df[sel], agecut, savdir=savdir)
+
+    if make_ks2sample_turnoff:
+        df_turnedoff, df_onMS = (
+        plot_ks2sample_abyRstar_turnoff_v_mainsequence(df[sel], savdir=savdir)
+        )
+
+    if make_turnoff_v_mainsequence_scatters and make_ks2sample_turnoff:
+
+        turnoff_v_mainsequence_scatters(df_turnedoff, df_onMS, savdir=savdir,
+                                        xparam='koi_period')
+        turnoff_v_mainsequence_scatters(df_turnedoff, df_onMS, savdir=savdir,
+                                        xparam='koi_dor')
+
 
 
 if __name__ == '__main__':
