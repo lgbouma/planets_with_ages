@@ -206,6 +206,67 @@ def age_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS, savdir=None):
     f.savefig(savdir+fname_png, dpi=250)
 
 
+def teffdist_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS,
+                                            teff_boundary_turnedoff,
+                                            teff_boundary_onMS, savdir=None,
+                                            show_onMS=True, logy=False,
+                                            absy=False):
+
+    plt.close('all')
+
+    f, ax = plt.subplots(nrows=1,ncols=1,figsize=(8,6))
+
+    if logy or absy:
+        ax.scatter(
+            df_turnedoff['koi_dor'],
+            np.abs(np.array(df_turnedoff['cks_steff'])-teff_boundary_turnedoff),
+            marker='s', s=8, zorder=1, rasterized=True, label='turned off'
+        )
+    else:
+        ax.scatter(
+            df_turnedoff['koi_dor'],
+            np.array(df_turnedoff['cks_steff'])-teff_boundary_turnedoff,
+            marker='s', s=8, zorder=1, rasterized=True, label='turned off'
+        )
+
+    if show_onMS:
+        ax.scatter(
+            df_onMS['koi_dor'],
+            np.array(df_onMS['cks_steff'])-teff_boundary_onMS, marker='s', s=8,
+            zorder=1, rasterized=True, label='on MS'
+        )
+
+    if not logy and not absy:
+        ax.set_ylabel(
+            '$ T_{\mathrm{eff,\ actual}}$ - $T_{\mathrm{eff,\ dividing\ line}} $ [K]'
+        )
+    else:
+        ax.set_ylabel(
+            '$| T_{\mathrm{eff,\ actual}}$ - $T_{\mathrm{eff,\ dividing\ line}}| $ [K]'
+        )
+    xscale='log'
+    ax.set_xscale(xscale)
+    ax.set_xlabel('koi a/Rstar')
+
+    ax.legend(loc='best',fontsize='small')
+
+    if logy:
+        ax.set_yscale('log')
+
+    f.tight_layout()
+
+    savstr = (
+        '_classified_scatter' if show_onMS
+        else '_classified_scatter_onlyturnedoff'
+    )
+    logstr = 'log' if logy else ''
+    absstr = 'abs' if absy else ''
+    fname_pdf = '{:s}{:s}teffdist_vs_log_koi_dor{:s}.pdf'.format(logstr,absstr,savstr)
+    fname_png = fname_pdf.replace('.pdf','.png')
+    f.savefig(savdir+fname_pdf)
+    print('saved {:s}'.format(fname_pdf))
+    f.savefig(savdir+fname_png, dpi=250)
+
 
 def logg_vs_teff_classified_scatter(df_turnedoff, df_onMS, savdir=None):
 
@@ -272,16 +333,31 @@ def plot_ks2sample_abyRstar_turnoff_v_mainsequence(df, savdir=None):
     slogg = arr(df['giso_slogg'])
     steff = arr(df['cks_steff'])
 
-    sel = (steff > 5000)
-    sel &= ( slogg < fn(steff) )
-    sel &= ( steff < fn2(slogg) )
+    sel = (steff > 5000) & (slogg <= np.max(_logg))
+    subsel = ( slogg < fn(steff) )
+    subsel &= ( steff < fn2(slogg) )
 
-    df_turnedoff = df[sel]
-    df_onMS = df[~sel]
+    df_turnedoff = df[sel & subsel]
+    df_onMS = df[sel & ~subsel]
+
+    teff_boundary_turnedoff = fn2(np.array(df_turnedoff['giso_slogg']))
+    teff_boundary_onMS = fn2(np.array(df_onMS['giso_slogg']))
 
     # make classified scatter plot
     logg_vs_teff_classified_scatter(df_turnedoff, df_onMS, savdir=savdir)
     age_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS, savdir=savdir)
+    teffdist_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS,
+                                            teff_boundary_turnedoff,
+                                            teff_boundary_onMS, savdir=savdir)
+    teffdist_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS,
+                                            teff_boundary_turnedoff,
+                                            teff_boundary_onMS, savdir=savdir,
+                                            show_onMS=False, logy=False,
+                                            absy=True)
+    teffdist_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS,
+                                            teff_boundary_turnedoff,
+                                            teff_boundary_onMS, savdir=savdir,
+                                            show_onMS=False, logy=True)
 
     # make the cdf plot
     plt.close('all')
@@ -510,7 +586,6 @@ def make_old_short_period_plots():
                                         xparam='koi_period')
         turnoff_v_mainsequence_scatters(df_turnedoff, df_onMS, savdir=savdir,
                                         xparam='koi_dor')
-
 
 
 if __name__ == '__main__':
