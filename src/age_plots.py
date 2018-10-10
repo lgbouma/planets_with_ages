@@ -57,6 +57,13 @@ def plot_wellmeasuredparam(tab, finite_age_inds, xparam, logx, logy,
     '''
 
     goodvals = tab[xparam][finite_age_inds]
+    try:
+        good_perrs = arr(tab[xparam+'_err1'][finite_age_inds]).astype(float)
+        good_merrs = np.abs(arr(tab[xparam+'_err2'][finite_age_inds]).astype(float))
+        show_median_err = True
+    except KeyError:
+        show_median_err = False
+
 
     # only one of is_exoarchive, is_cks, or is_sandersdas should be True.
     assert np.sum(np.array([(is_exoarchive != is_cks),
@@ -91,13 +98,20 @@ def plot_wellmeasuredparam(tab, finite_age_inds, xparam, logx, logy,
         xsel = arr(goodvals) < 3e1
     if 'koi_period' in xparam:
         xsel = arr(goodvals) < 2e2
-    if 'koi_dor' in xparam:
-        xsel = arr(goodvals) < 178
+    if xparam in ['koi_dor', 'cks_VII_dor']:
+        xsel = arr(goodvals) < 100
 
 
     if type(xsel) != int:
         # you selected by some criterion in xparam
-        xvals, yvals = arr(goodvals[xsel]), arr(ages[xsel])
+        xvals, yvals = arr(goodvals)[xsel], arr(ages)[xsel]
+
+        if show_median_err:
+            x_perr = good_perrs[xsel]
+            x_merr = good_merrs[xsel]
+            xerrs = np.array(
+                    [x_perr, x_merr]).reshape(2, len(ages[xsel]))
+
         ages_perr = arr(ages_perr[xsel])
         ages_merr = arr(ages_merr[xsel])
         ages_errs = np.array(
@@ -106,6 +120,13 @@ def plot_wellmeasuredparam(tab, finite_age_inds, xparam, logx, logy,
 
     else:
         xvals, yvals = arr(goodvals), arr(ages)
+
+        if show_median_err:
+            x_perr = arr(good_perrs)
+            x_merr = arr(good_merrs)
+            xerrs = np.array(
+                    [x_perr, x_merr]).reshape(2, len(ages))
+
         ages_errs = np.array(
                 [ages_perr, ages_merr]).reshape(2, len(ages))
         yerrs = ages_errs
@@ -127,6 +148,14 @@ def plot_wellmeasuredparam(tab, finite_age_inds, xparam, logx, logy,
                 elinewidth=0.3, ecolor='k', capsize=0, capthick=0,
                 linewidth=0, fmt='s', ms=0, zorder=2, alpha=0.05)
 
+    # median errors
+    if show_median_err:
+        ax.errorbar(np.percentile(xvals, 99), np.percentile(yvals, 5),
+                    yerr=np.median(yerrs), xerr=np.median(xerrs),
+                    elinewidth=0.5, ecolor='firebrick', capsize=0.5,
+                    capthick=0.5, linewidth=0, fmt='s', ms=0, zorder=5,
+                    alpha=1)
+
     if '_' in xparam:
         ax.set_xlabel(' '.join(xparam.split('_')))
     else:
@@ -135,6 +164,8 @@ def plot_wellmeasuredparam(tab, finite_age_inds, xparam, logx, logy,
         ax.set_xlabel('cks VII planet radius [Re]')
     if is_cks and 'koi_dor' in xparam:
         ax.set_xlabel('KOI a/Rstar')
+    if is_cks and 'cks_VII_dor' in xparam:
+        ax.set_xlabel('CKS-VII a/Rstar')
     if is_exoarchive:
         ax.set_ylabel('age [gyr] (from exoarchive)')
     elif is_sandersdas:
@@ -383,8 +414,10 @@ def make_stacked_histograms(df, xparam='radius', logtime=False,
         xlabel='giso_prad'
     elif xparam=='period':
         xlabel='koi_period'
-    elif xparam=='aoverRstar':
+    elif xparam=='koi_dor':
         xlabel='koi_dor'
+    elif xparam=='cks_VII_dor':
+        xlabel='cks_VII_dor'
     else:
         raise NotImplementedError
 
@@ -396,7 +429,7 @@ def make_stacked_histograms(df, xparam='radius', logtime=False,
         logbin_x = logbin_radii
     elif xparam=='period':
         logbin_x = logbin_period
-    elif xparam=='aoverRstar':
+    elif xparam in ['koi_dor','cks_VII_dor']:
         logbin_x = logbin_aoverRstar
     else:
         raise NotImplementedError
@@ -430,8 +463,8 @@ def make_stacked_histograms(df, xparam='radius', logtime=False,
 
         sel = (ages > minage) & (ages < maxage)
         sel &= np.isfinite(arr(df[xlabel]))
-        if xparam=='aoverRstar':
-            sel &= arr(df[xlabel]) < 177.8
+        if xparam in ['koi_dor','cks_VII_dor']:
+            sel &= arr(df[xlabel]) < 100
 
         N_cks = len(df[xlabel][sel])
 
@@ -458,9 +491,9 @@ def make_stacked_histograms(df, xparam='radius', logtime=False,
         elif xparam=='period':
             text_yval = 0.17
             text_xval = 200
-        elif xparam=='aoverRstar':
+        elif xparam in ['koi_dor','cks_VII_dor']:
             text_yval = 0.17
-            text_xval = 170
+            text_xval = 99
         else:
             raise NotImplementedError
 
@@ -477,9 +510,9 @@ def make_stacked_histograms(df, xparam='radius', logtime=False,
             ax.set_ylim([0,0.2])
         elif not logtime and xparam=='period':
             ax.set_ylim([0,0.2])
-        elif logtime and xparam=='aoverRstar':
+        elif logtime and xparam in ['koi_dor','cks_VII_dor']:
             ax.set_ylim([0,0.2])
-        elif not logtime and xparam=='aoverRstar':
+        elif not logtime and xparam in ['koi_dor','cks_VII_dor']:
             ax.set_ylim([0,0.2])
 
         if ix in [5,6,7,8] and not logtime:
@@ -494,8 +527,10 @@ def make_stacked_histograms(df, xparam='radius', logtime=False,
         ax.set_xlabel('CKS VII planet radius [Re]')
     elif xparam=='period':
         ax.set_xlabel('KOI period [d] (less than 180d)')
-    elif xparam=='aoverRstar':
-        ax.set_xlabel('a/Rstar (less than 178)')
+    elif xparam=='koi_dor':
+        ax.set_xlabel('KOI a/Rstar (less than 100)')
+    elif xparam=='cks_VII_dor':
+        ax.set_xlabel('CKS-VII a/Rstar (less than 100)')
     else:
         raise NotImplementedError
 
@@ -604,6 +639,8 @@ def make_quartile_scatter(df, xparam='koi_period',
             ax.set_xlim([0.3,330])
         elif xparam=='koi_dor':
             ax.set_xlim([1,200])
+        elif xparam=='cks_VII_dor':
+            ax.set_xlim([1,200])
         else:
             raise NotImplementedError
         ax.set_ylim([0.5,32])
@@ -623,8 +660,11 @@ def make_quartile_scatter(df, xparam='koi_period',
         plt.xlabel("orbital period [days]")
         savpath = savdir+'rp_vs_period_scatter_quartiles.pdf'
     elif xparam=='koi_dor':
-        plt.xlabel("a/Rstar")
-        savpath = savdir+'rp_vs_aoverRstar_scatter_quartiles.pdf'
+        plt.xlabel("KOI a/Rstar")
+        savpath = savdir+'rp_vs_koi_dor_scatter_quartiles.pdf'
+    elif xparam=='cks_VII_dor':
+        plt.xlabel("CKS-VII a/Rstar")
+        savpath = savdir+'rp_vs_cks_VII_dor_scatter_quartiles.pdf'
     plt.ylabel("planet radius [earth radii]")
 
     f.savefig(savpath, bbox_inches='tight')
@@ -1198,7 +1238,7 @@ def turnoff_v_mainsequence_scatters(df_turnedoff, df_onMS, savdir=None,
         ax.set_yscale('log')
         if xparam=='koi_period':
             ax.set_xlim([0.3,210])
-        elif xparam=='koi_dor':
+        elif xparam in ['koi_dor', 'cks_VII_dor']:
             ax.set_xlim([1,200])
         else:
             raise NotImplementedError
@@ -1217,8 +1257,12 @@ def turnoff_v_mainsequence_scatters(df_turnedoff, df_onMS, savdir=None,
         plt.xlabel("orbital period [days]")
         savpath = savdir+'rp_vs_period_scatter_turnoff_v_mainsequence.pdf'
     elif xparam=='koi_dor':
-        plt.xlabel("a/Rstar")
-        savpath = savdir+'rp_vs_aoverRstar_scatter_turnoff_v_mainsequence.pdf'
+        plt.xlabel("KOI a/Rstar")
+        savpath = savdir+'rp_vs_koi_dor_scatter_turnoff_v_mainsequence.pdf'
+    elif xparam=='cks_VII_dor':
+        plt.xlabel("CKS-VII a/Rstar")
+        savpath = savdir+'rp_vs_cks_VII_dor_scatter_turnoff_v_mainsequence.pdf'
+
     plt.ylabel("planet radius [earth radii]")
 
     f.savefig(savpath, bbox_inches='tight')

@@ -107,7 +107,8 @@ def _get_cks_data(merge_vs_gaia=None):
     # pull non-changed stellar parameters from CKS II (needed for filters)
     subcols = ['kic_kepmag', 'id_starname', 'cks_fp', 'koi_impact',
                'koi_count', 'koi_dor', 'koi_model_snr', 'id_koicand',
-               'id_kic', 'koi_steff', 'koi_slogg']
+               'id_kic', 'koi_steff', 'koi_slogg', 'koi_dor_err1',
+               'koi_dor_err2']
 
     df = pd.merge(df_m, df_II[subcols], how='left', on='id_koicand',
                   suffixes=('_VII', '_II'))
@@ -117,6 +118,53 @@ def _get_cks_data(merge_vs_gaia=None):
     df['id_starname'] = df['id_starname_VII']
     df = df.drop('id_starname_VII', 1)
     df = df.drop('id_starname_II', 1)
+
+    # compute a/Rstar using "a" from the period and CKS-VII stellar mass, and
+    # then divide by the "R" from CKS-VII.  The value of “a/R” that comes from
+    # the light curve is pretty ratty.  First, do it directly. Then use the
+    # uncertainties package to linearly propagate the errors (take the mean
+    # error to make it tractable, otherwise we need to pull out the posteriors,
+    # if they're public.)
+    period = np.array(df['koi_period'])*u.day
+    Mstar = np.array(df['giso_smass'])*u.Msun
+    a = ( period**2 * (c.G * Mstar)/(4*np.pi**2) )**(1/3)
+    Rstar = np.array(df['giso_srad'])*u.Rsun
+    df['cks_VII_dor'] = (a/Rstar).cgs.value
+
+    from uncertainties import unumpy
+    period = (np.array(df['koi_period'])*u.day).cgs.value
+    period_err = ( np.mean( np.array( [
+        np.array(df['koi_period_err1']).astype(float),
+        np.abs(np.array(df['koi_period_err2']).astype(float))
+        ]), axis=0 )*u.day).cgs.value
+
+    Mstar = (np.array(df['giso_smass'])*u.Msun).cgs.value
+    Mstar_err = ( np.mean( np.array( [
+        np.array(df['giso_smass_err1']).astype(float),
+        np.abs(np.array(df['giso_smass_err2']).astype(float))
+        ]), axis=0 )*u.Msun).cgs.value
+
+    Rstar = (np.array(df['giso_srad'])*u.Rsun).cgs.value
+    Rstar_err = ( np.mean( np.array( [
+        np.array(df['giso_srad_err1']).astype(float),
+        np.abs(np.array(df['giso_srad_err2']).astype(float))
+        ]), axis=0 )*u.Rsun).cgs.value
+
+    u_period = unumpy.uarray(period, period_err)
+    u_Mstar = unumpy.uarray(Mstar, Mstar_err)
+    u_Rstar = unumpy.uarray(Rstar, Rstar_err)
+
+    u_a = ( u_period**2 * ((c.G).cgs.value * u_Mstar)/(4*np.pi**2) )**(1/3)
+
+    u_abyRstar = u_a / u_Rstar
+
+    np.testing.assert_array_almost_equal(
+        np.array([v.n for v in u_abyRstar]), np.array(df['cks_VII_dor']),
+        decimal=8)
+
+    cks_VII_dor_err = np.array([v.s for v in u_abyRstar])
+    df['cks_VII_dor_err1'] = cks_VII_dor_err
+    df['cks_VII_dor_err2'] = cks_VII_dor_err
 
     # Get gaia astrometric excess noise significance. see:
     # https://gea.esac.esa.int/archive/documentation/GDR2/Gaia_archive/chap_datamodel/sec_dm_main_tables/ssec_dm_gaia_source.html

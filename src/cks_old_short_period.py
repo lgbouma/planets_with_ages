@@ -91,14 +91,15 @@ def calculate_and_print_fractions(df, sel):
             )
 
 
-def plot_ks2sample_abyRstar_old_v_young(df, agecut, savdir=None):
+def plot_ks2sample_abyRstar_old_v_young(df, agecut, savdir=None,
+                                        abyRstar_str='koi_dor'):
 
     f, ax = plt.subplots(nrows=1,ncols=1,figsize=(8,6))
 
     df_old = df[(10**(df['giso_slogage'])>=agecut)]
     df_young = df[(10**(df['giso_slogage'])<agecut)]
 
-    counts, bin_edges = np.histogram(arr(df_old['koi_dor']),
+    counts, bin_edges = np.histogram(arr(df_old[abyRstar_str]),
                                      bins=len(df_old),
                                      normed=True)
     cdf = np.cumsum(counts)
@@ -106,7 +107,7 @@ def plot_ks2sample_abyRstar_old_v_young(df, agecut, savdir=None):
             label="{:d} ``old'' (>{:.1e} yr)".format(len(df_old), agecut),
             lw=0.5)
 
-    counts, bin_edges = np.histogram(arr(df_young['koi_dor']),
+    counts, bin_edges = np.histogram(arr(df_young[abyRstar_str]),
                                      bins=len(df_young),
                                      normed=True)
     cdf = np.cumsum(counts)
@@ -118,10 +119,10 @@ def plot_ks2sample_abyRstar_old_v_young(df, agecut, savdir=None):
 
     # tests for statistical signifiance
     from scipy import stats
-    D, ks_p_value = stats.ks_2samp(arr(df_old['koi_dor']),
-                                   arr(df_young['koi_dor']))
-    _, _, ad_p_value = stats.anderson_ksamp([arr(df_old['koi_dor']),
-                                            arr(df_young['koi_dor'])])
+    D, ks_p_value = stats.ks_2samp(arr(df_old[abyRstar_str]),
+                                   arr(df_young[abyRstar_str]))
+    _, _, ad_p_value = stats.anderson_ksamp([arr(df_old[abyRstar_str]),
+                                            arr(df_young[abyRstar_str])])
 
     # check differences in Mp/Mstar btwn old and young population
     from cks_multis_vs_age import _get_WM14_mass
@@ -167,39 +168,49 @@ def plot_ks2sample_abyRstar_old_v_young(df, agecut, savdir=None):
             transform=ax.transAxes, ha='right', va='bottom',
             fontsize='xx-small')
 
-    ax.set_xlabel('koi a/Rstar')
+    if abyRstar_str=='koi_dor':
+        xlabel='koi a/rstar'
+    elif abyRstar_str=='cks_VII_dor':
+        xlabel='CKS VII a/rstar'
+    ax.set_xlabel(xlabel)
     ax.set_ylabel('cdf')
     ax.set_xscale('log')
 
     # save it
     f.tight_layout()
     savpath = (savdir+
-               "ks2sample_abyRstar_old_v_young_cut{:.1e}yr.png".format(agecut))
+               "ks2sample_{:s}_old_v_young_cut{:.1e}yr.png".
+               format(abyRstar_str, agecut)
+              )
     f.savefig(savpath, bbox_inches="tight", dpi=350)
     print("made {:s}".format(savpath))
 
 
-def age_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS, savdir=None):
+def age_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS, savdir=None,
+                                       abyRstar_str='koi_dor'):
 
     plt.close('all')
 
     f, ax = plt.subplots(nrows=1,ncols=1,figsize=(8,6))
-    ax.scatter(df_turnedoff['koi_dor'], 10**(df_turnedoff['giso_slogage'])/1e9,
+    ax.scatter(df_turnedoff[abyRstar_str], 10**(df_turnedoff['giso_slogage'])/1e9,
                marker='s', s=8, zorder=1, rasterized=True, label='turned off')
-    ax.scatter(df_onMS['koi_dor'], 10**(df_onMS['giso_slogage'])/1e9,
+    ax.scatter(df_onMS[abyRstar_str], 10**(df_onMS['giso_slogage'])/1e9,
                marker='s', s=8, zorder=1, rasterized=True, label='on MS')
 
     ax.set_ylabel('age [Gyr] (cks VII gaia+CKS isochrone)')
     xscale='log'
     ax.set_xscale(xscale)
-    ax.set_xlabel('koi a/Rstar')
+    if abyRstar_str=='koi_dor':
+        ax.set_xlabel('koi a/Rstar')
+    elif abyRstar_str=='cks_VII_dor':
+        ax.set_xlabel('CKS-VII a/Rstar')
 
     ax.legend(loc='best',fontsize='small')
 
     f.tight_layout()
 
     savstr = '_classified_scatter'
-    fname_pdf = 'age_vs_log_koi_dor{:s}.pdf'.format(savstr)
+    fname_pdf = 'age_vs_log_{:s}{:s}.pdf'.format(abyRstar_str, savstr)
     fname_png = fname_pdf.replace('.pdf','.png')
     f.savefig(savdir+fname_pdf)
     print('saved {:s}'.format(fname_pdf))
@@ -210,7 +221,7 @@ def teffdist_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS,
                                             teff_boundary_turnedoff,
                                             teff_boundary_onMS, savdir=None,
                                             show_onMS=True, logy=False,
-                                            absy=False):
+                                            absy=False, abyRstar_str='koi_dor'):
 
     plt.close('all')
 
@@ -218,20 +229,20 @@ def teffdist_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS,
 
     if logy or absy:
         ax.scatter(
-            df_turnedoff['koi_dor'],
+            df_turnedoff[abyRstar_str],
             np.abs(np.array(df_turnedoff['cks_steff'])-teff_boundary_turnedoff),
             marker='s', s=8, zorder=1, rasterized=True, label='turned off'
         )
     else:
         ax.scatter(
-            df_turnedoff['koi_dor'],
+            df_turnedoff[abyRstar_str],
             np.array(df_turnedoff['cks_steff'])-teff_boundary_turnedoff,
             marker='s', s=8, zorder=1, rasterized=True, label='turned off'
         )
 
     if show_onMS:
         ax.scatter(
-            df_onMS['koi_dor'],
+            df_onMS[abyRstar_str],
             np.array(df_onMS['cks_steff'])-teff_boundary_onMS, marker='s', s=8,
             zorder=1, rasterized=True, label='on MS'
         )
@@ -246,7 +257,10 @@ def teffdist_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS,
         )
     xscale='log'
     ax.set_xscale(xscale)
-    ax.set_xlabel('koi a/Rstar')
+    if abyRstar_str=='koi_dor':
+        ax.set_xlabel('koi a/Rstar')
+    elif abyRstar_str=='cks_VII_dor':
+        ax.set_xlabel('CKS-VII a/Rstar')
 
     ax.legend(loc='best',fontsize='small')
 
@@ -261,7 +275,8 @@ def teffdist_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS,
     )
     logstr = 'log' if logy else ''
     absstr = 'abs' if absy else ''
-    fname_pdf = '{:s}{:s}teffdist_vs_log_koi_dor{:s}.pdf'.format(logstr,absstr,savstr)
+    fname_pdf = ('{:s}{:s}teffdist_vs_log_{:s}{:s}.pdf'.
+                 format(logstr,absstr,abyRstar_str,savstr))
     fname_png = fname_pdf.replace('.pdf','.png')
     f.savefig(savdir+fname_pdf)
     print('saved {:s}'.format(fname_pdf))
@@ -313,7 +328,8 @@ def logg_vs_teff_classified_scatter(df_turnedoff, df_onMS, savdir=None):
     f.savefig(savdir+fname_png, dpi=250)
 
 
-def plot_ks2sample_abyRstar_turnoff_v_mainsequence(df, savdir=None):
+def plot_ks2sample_abyRstar_turnoff_v_mainsequence(df, savdir=None,
+                                                   abyRstar_str='koi_dor'):
 
     # get the stars past the "turnoff", and those not.
     _df = pd.read_csv('../data/logg_vs_teff_line.csv',
@@ -345,25 +361,29 @@ def plot_ks2sample_abyRstar_turnoff_v_mainsequence(df, savdir=None):
 
     # make classified scatter plot
     logg_vs_teff_classified_scatter(df_turnedoff, df_onMS, savdir=savdir)
-    age_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS, savdir=savdir)
+    age_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS, savdir=savdir,
+                                       abyRstar_str=abyRstar_str)
     teffdist_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS,
                                             teff_boundary_turnedoff,
-                                            teff_boundary_onMS, savdir=savdir)
+                                            teff_boundary_onMS, savdir=savdir,
+                                            abyRstar_str=abyRstar_str)
     teffdist_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS,
                                             teff_boundary_turnedoff,
                                             teff_boundary_onMS, savdir=savdir,
                                             show_onMS=False, logy=False,
-                                            absy=True)
+                                            absy=True,
+                                            abyRstar_str=abyRstar_str)
     teffdist_vs_abyRstar_classified_scatter(df_turnedoff, df_onMS,
                                             teff_boundary_turnedoff,
                                             teff_boundary_onMS, savdir=savdir,
-                                            show_onMS=False, logy=True)
+                                            show_onMS=False, logy=True,
+                                            abyRstar_str=abyRstar_str)
 
     # make the cdf plot
     plt.close('all')
     f, ax = plt.subplots(nrows=1,ncols=1,figsize=(8,6))
 
-    counts, bin_edges = np.histogram(arr(df_turnedoff['koi_dor']),
+    counts, bin_edges = np.histogram(arr(df_turnedoff[abyRstar_str]),
                                      bins=len(df_turnedoff),
                                      normed=True)
     cdf = np.cumsum(counts)
@@ -371,7 +391,7 @@ def plot_ks2sample_abyRstar_turnoff_v_mainsequence(df, savdir=None):
             label="{:d} ``turnedoff''".format(len(df_turnedoff)),
             lw=0.5)
 
-    counts, bin_edges = np.histogram(arr(df_onMS['koi_dor']),
+    counts, bin_edges = np.histogram(arr(df_onMS[abyRstar_str]),
                                      bins=len(df_onMS),
                                      normed=True)
     cdf = np.cumsum(counts)
@@ -383,10 +403,10 @@ def plot_ks2sample_abyRstar_turnoff_v_mainsequence(df, savdir=None):
 
     # tests for statistical signifiance
     from scipy import stats
-    D, ks_p_value = stats.ks_2samp(arr(df_turnedoff['koi_dor']),
-                                   arr(df_onMS['koi_dor']))
-    _, _, ad_p_value = stats.anderson_ksamp([arr(df_turnedoff['koi_dor']),
-                                            arr(df_onMS['koi_dor'])])
+    D, ks_p_value = stats.ks_2samp(arr(df_turnedoff[abyRstar_str]),
+                                   arr(df_onMS[abyRstar_str]))
+    _, _, ad_p_value = stats.anderson_ksamp([arr(df_turnedoff[abyRstar_str]),
+                                            arr(df_onMS[abyRstar_str])])
 
     # check differences in Mp/Mstar btwn old and young population
     from cks_multis_vs_age import _get_WM14_mass
@@ -433,39 +453,44 @@ def plot_ks2sample_abyRstar_turnoff_v_mainsequence(df, savdir=None):
             transform=ax.transAxes, ha='right', va='bottom',
             fontsize='xx-small')
 
-    ax.set_xlabel('koi a/Rstar')
+    if abyRstar_str=='koi_dor':
+        ax.set_xlabel('koi a/Rstar')
+    elif abyRstar_str=='cks_VII_dor':
+        ax.set_xlabel('CKS-VII a/Rstar')
     ax.set_ylabel('cdf')
     ax.set_xscale('log')
 
     f.tight_layout()
-    savpath = savdir + "ks2sample_abyRstar_turnoff_v_mainsequence.png"
+    savpath = ( savdir +
+               "ks2sample_{:s}_turnoff_v_mainsequence.png".format(abyRstar_str)
+              )
     f.savefig(savpath, bbox_inches="tight", dpi=350)
     print("made {:s}".format(savpath))
-    savpath = savdir + "ks2sample_abyRstar_turnoff_v_mainsequence.pdf"
+    savpath = savpath.replace('.png','.pdf')
     f.savefig(savpath, bbox_inches="tight")
     print("made {:s}".format(savpath))
 
     return df_turnedoff, df_onMS
 
 
-def _apply_short_period_filters(df):
+def _take_innermost_filter(df):
     # impose a/Rstar < 100
     # only take the innermost detected transiting planet of any given system
-
-    sel = np.array(df['koi_dor'] < 100)
 
     # construct column to select innermost objects of systems
     is_innermost = []
     for ix,row in df.iterrows():
         sname = row['id_starname']
-        this_sys = df[sel][ df[sel]['id_starname'] == sname ]
+        this_sys = df[ df['id_starname'] == sname ]
         if float(row['koi_dor']) == np.min( this_sys['koi_dor'] ):
             is_innermost.append(True)
         else:
             is_innermost.append(False)
     is_innermost = np.array(is_innermost)
 
-    return sel & is_innermost
+    sel = np.array(df['cks_VII_dor'] < 100)
+
+    return is_innermost & sel
 
 
 def make_old_short_period_plots():
@@ -476,18 +501,30 @@ def make_old_short_period_plots():
     # approach #3: just use Petigura+ 2018's filters, + filter on gaia
     # astrometric excess, + a/Rstar<100 only, + only the innermost planets of
     # systems.
-    do_approach1 = False
-    do_approach2 = False
-    do_approach3 = True
-    approaches = np.array([do_approach1,do_approach2,do_approach3])
-    assert len(approaches[approaches])==1
+    do_approach1 = 0
+    do_approach2 = 0
+    do_approach3 = 1
+    approaches = np.array(
+        [do_approach1,do_approach2,do_approach3]).astype(bool)
+    if not len(approaches[approaches])==1:
+        raise AssertionError('only one approach allowed')
 
-    make_initial_plots = False
-    make_sanity_check_scatters = False
-    make_hr_diagram = False
-    make_ks2sample_abyRstar = False
-    make_ks2sample_turnoff = True
-    make_turnoff_v_mainsequence_scatters = True
+    make_all = 1
+    if make_all:
+        make_initial_plots = 1
+        make_sanity_check_scatters = 1
+        make_hr_diagram = 1
+        make_ks2sample_abyRstar = 1
+        make_ks2sample_turnoff = 1
+        make_turnoff_v_mainsequence_scatters = 1
+    else:
+        make_initial_plots = 0
+        make_sanity_check_scatters = 0
+        make_hr_diagram = 0
+        make_ks2sample_abyRstar = 0
+        make_ks2sample_turnoff = 1
+        make_turnoff_v_mainsequence_scatters = 1
+
 
     if do_approach1:
         df = _get_cks_data()
@@ -504,24 +541,31 @@ def make_old_short_period_plots():
     if do_approach3:
         df = _get_cks_data(merge_vs_gaia=True)
         sel = _apply_cks_IV_filters_plus_gaia_astrom_excess(df)
-        sel &= _apply_short_period_filters(df)
+        sel &= _take_innermost_filter(df)
         savdir = '../results/cks_age_plots_old_short_period_onlyinnermost/'
         savdir_append='_old_short_period_onlyinnermost'
 
     # remake the plots that got us interested in this
     if make_initial_plots:
-        for xparam in ['koi_period', 'koi_dor']:
-            logx, logy = True, False
-            plot_wellmeasuredparam(df, sel, xparam, logx, logy,
-                                   is_cks=True, savdir_append=savdir_append)
-            plot_wellmeasuredparam(df, sel, xparam, logx, logy,
-                                   is_cks=True, savdir_append=savdir_append)
+        for xparam in ['koi_period', 'koi_dor', 'cks_VII_dor']:
+            logy = False
+            for logx in [True,False]:
+                plot_wellmeasuredparam(df, sel, xparam, logx, logy,
+                                       is_cks=True,
+                                       savdir_append=savdir_append)
+                plot_wellmeasuredparam(df, sel, xparam, logx, logy,
+                                       is_cks=True,
+                                       savdir_append=savdir_append)
 
-        make_stacked_histograms(df[sel], logtime=False, xparam='aoverRstar',
+        make_stacked_histograms(df[sel], logtime=False, xparam='koi_dor',
+                                savdir=savdir)
+        make_stacked_histograms(df[sel], logtime=False, xparam='cks_VII_dor',
                                 savdir=savdir)
         make_stacked_histograms(df[sel], logtime=False, xparam='period',
                                 savdir=savdir)
-        make_stacked_histograms(df[sel], logtime=True, xparam='aoverRstar',
+        make_stacked_histograms(df[sel], logtime=True, xparam='koi_dor',
+                                savdir=savdir)
+        make_stacked_histograms(df[sel], logtime=True, xparam='cks_VII_dor',
                                 savdir=savdir)
         make_stacked_histograms(df[sel], logtime=True, xparam='period',
                                 savdir=savdir)
@@ -529,12 +573,16 @@ def make_old_short_period_plots():
                               savdir=savdir)
         make_quartile_scatter(df[sel], xparam='koi_dor',
                               savdir=savdir)
+        make_quartile_scatter(df[sel], xparam='cks_VII_dor',
+                              savdir=savdir)
 
     if make_sanity_check_scatters:
         # a few sanity checks
         plot_scatter(df, sel, 'koi_period', 'cks_smet', True, False, is_cks=True,
                      savdir=savdir, ylim=[0.5,-0.5])
         plot_scatter(df, sel, 'koi_dor', 'cks_smet', True, False, is_cks=True,
+                     savdir=savdir, ylim=[0.5,-0.5])
+        plot_scatter(df, sel, 'cks_VII_dor', 'cks_smet', True, False, is_cks=True,
                      savdir=savdir, ylim=[0.5,-0.5])
         plot_scatter(df, sel, 'cks_smet', 'giso_slogage', False, False,
                      is_cks=True, savdir=savdir, xlim=[0.5,-0.5])
@@ -573,11 +621,20 @@ def make_old_short_period_plots():
     if make_ks2sample_abyRstar:
         agecuts = [7e9,8e9,9e9,10e9,11e9,12e9]
         for agecut in agecuts:
-            plot_ks2sample_abyRstar_old_v_young(df[sel], agecut, savdir=savdir)
+            plot_ks2sample_abyRstar_old_v_young(df[sel], agecut, savdir=savdir,
+                                               abyRstar_str='koi_dor')
+            plot_ks2sample_abyRstar_old_v_young(df[sel], agecut, savdir=savdir,
+                                               abyRstar_str='cks_VII_dor')
 
     if make_ks2sample_turnoff:
+        _, _ = (
+        plot_ks2sample_abyRstar_turnoff_v_mainsequence(df[sel], savdir=savdir,
+                                                      abyRstar_str='koi_dor')
+        )
+
         df_turnedoff, df_onMS = (
-        plot_ks2sample_abyRstar_turnoff_v_mainsequence(df[sel], savdir=savdir)
+        plot_ks2sample_abyRstar_turnoff_v_mainsequence(df[sel], savdir=savdir,
+                                                      abyRstar_str='cks_VII_dor')
         )
 
     if make_turnoff_v_mainsequence_scatters and make_ks2sample_turnoff:
@@ -586,6 +643,8 @@ def make_old_short_period_plots():
                                         xparam='koi_period')
         turnoff_v_mainsequence_scatters(df_turnedoff, df_onMS, savdir=savdir,
                                         xparam='koi_dor')
+        turnoff_v_mainsequence_scatters(df_turnedoff, df_onMS, savdir=savdir,
+                                        xparam='cks_VII_dor')
 
 
 if __name__ == '__main__':
