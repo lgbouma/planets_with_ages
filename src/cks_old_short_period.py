@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 from `cks_age_exploration`, we found that there are not many old and close-in
 planets. Where are all the short-period planets around the oldest stars?
@@ -509,21 +510,23 @@ def make_old_short_period_plots():
     if not len(approaches[approaches])==1:
         raise AssertionError('only one approach allowed')
 
-    make_all = 1
+    make_all = 0
     if make_all:
         make_initial_plots = 1
+        make_stacked_histogram_plots = 1
         make_sanity_check_scatters = 1
         make_hr_diagram = 1
         make_ks2sample_abyRstar = 1
         make_ks2sample_turnoff = 1
         make_turnoff_v_mainsequence_scatters = 1
     else:
-        make_initial_plots = 0
+        make_initial_plots = 1
+        make_stacked_histogram_plots = 0
         make_sanity_check_scatters = 0
         make_hr_diagram = 0
         make_ks2sample_abyRstar = 0
-        make_ks2sample_turnoff = 1
-        make_turnoff_v_mainsequence_scatters = 1
+        make_ks2sample_turnoff = 0
+        make_turnoff_v_mainsequence_scatters = 0
 
 
     if do_approach1:
@@ -548,15 +551,16 @@ def make_old_short_period_plots():
     # remake the plots that got us interested in this
     if make_initial_plots:
         for xparam in ['koi_period', 'koi_dor', 'cks_VII_dor']:
-            logy = False
-            for logx in [True,False]:
-                plot_wellmeasuredparam(df, sel, xparam, logx, logy,
-                                       is_cks=True,
-                                       savdir_append=savdir_append)
-                plot_wellmeasuredparam(df, sel, xparam, logx, logy,
-                                       is_cks=True,
-                                       savdir_append=savdir_append)
+            for logy in [True,False]:
+                for logx in [True,False]:
+                    plot_wellmeasuredparam(df, sel, xparam, logx, logy,
+                                           is_cks=True,
+                                           savdir_append=savdir_append)
+                    plot_wellmeasuredparam(df, sel, xparam, logx, logy,
+                                           is_cks=True,
+                                           savdir_append=savdir_append)
 
+    if make_stacked_histogram_plots:
         make_stacked_histograms(df[sel], logtime=False, xparam='koi_dor',
                                 savdir=savdir)
         make_stacked_histograms(df[sel], logtime=False, xparam='cks_VII_dor',

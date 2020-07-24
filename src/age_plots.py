@@ -29,10 +29,6 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd, numpy as np
 
-from matplotlib import rc
-rc('font', **{'family': 'serif', 'serif': ['Times New Roman']})
-rc('text', usetex=True)
-
 from astropy.table import Table
 from astropy.io import ascii
 from astropy.coordinates import SkyCoord
@@ -150,7 +146,7 @@ def plot_wellmeasuredparam(tab, finite_age_inds, xparam, logx, logy,
 
     # median errors
     if show_median_err:
-        ax.errorbar(np.percentile(xvals, 99), np.percentile(yvals, 5),
+        ax.errorbar(np.percentile(xvals, 99), np.percentile(yvals, 50),
                     yerr=np.median(yerrs), xerr=np.median(xerrs),
                     elinewidth=0.5, ecolor='firebrick', capsize=0.5,
                     capthick=0.5, linewidth=0, fmt='s', ms=0, zorder=5,
@@ -180,6 +176,11 @@ def plot_wellmeasuredparam(tab, finite_age_inds, xparam, logx, logy,
 
     if not logy:
         ax.set_ylim([0,14])
+    if logy:
+        ax.set_ylim([10**(8.7),10**(10.15)])
+    if xparam == 'cks_VII_dor':
+        ax.set_xlim([1,1e2])
+
 
     f.tight_layout()
 

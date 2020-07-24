@@ -35,15 +35,8 @@ then
 $ python cks_age_exploration.py
 
 '''
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
-import pandas as pd, numpy as np
+import matplotlib.pyplot as plt, pandas as pd, numpy as np
 import os
-
-from matplotlib import rc
-rc('font', **{'family': 'serif', 'serif': ['Times New Roman']})
-rc('text', usetex=True)
 
 from astropy.table import Table
 from astropy.io import ascii
