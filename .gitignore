@@ -3,3 +3,5 @@ results/*
 exoarchive_vs_sd18_results.tar.gz
 *__pycache__*
 *DS_Store*
+*.ipynb_checkpoints*
+*semimajor_axis_evoln_timescales*
